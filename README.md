@@ -37,7 +37,11 @@ Navigate to **Settings** → **Configure Settings** → **Module Settings** → 
 
 # Manual Installation
 
-1. Copy this link: `https://raw.githubusercontent.com/brunocalado/dh-new-stat-tracker/main/module.json`
+1. Copy this link:
+
+```js https://raw.githubusercontent.com/brunocalado/dh-new-stat-tracker/main/module.json
+```
+ 
 2. Open Foundry VTT.
 3. Go to the **"Add-on Modules"** tab and click **"Install Module"**.
 4. Paste the link into the **"Manifest URL"** box and click Install.
