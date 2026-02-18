@@ -1,0 +1,23 @@
+<div class="tracker-status-wrapper">
+    <p class="notes">Configure max value for <strong>{{actorName}}</strong>.</p>
+    <hr>
+    <div class="form-group flexcol tracker-config-gap">
+        <div class="flexrow tracker-config-row">
+            <span>Global Max:</span>
+            <strong>{{globalMax}}</strong>
+        </div>
+        <div class="flexrow tracker-config-row tracker-config-row--center">
+            <span>Modifier:</span>
+            <div class="flexrow tracker-config-controls">
+                <button type="button" class="config-adjust tracker-btn" data-action="decrease"><i class="fas fa-minus"></i></button>
+                <span class="tracker-modifier-value">{{modifier}}</span>
+                <button type="button" class="config-adjust tracker-btn" data-action="increase"><i class="fas fa-plus"></i></button>
+            </div>
+        </div>
+        <hr class="tracker-hr">
+        <div class="flexrow tracker-config-row">
+            <span class="tracker-effective-label">Effective Max:</span>
+            <span class="tracker-effective-value">{{effectiveMax}}</span>
+        </div>
+    </div>
+</div>
