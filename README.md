@@ -39,7 +39,9 @@ Navigate to **Settings** → **Configure Settings** → **Module Settings** → 
 
 1. Copy this link:
 
-``` https://raw.githubusercontent.com/brunocalado/dh-new-stat-tracker/main/module.json
+```
+ https://raw.githubusercontent.com/brunocalado/dh-new-stat-tracker/main/module.json
+
 ```
  
 2. Open Foundry VTT.
