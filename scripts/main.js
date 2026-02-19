@@ -52,7 +52,25 @@ function _getSettings() {
     };
 }
 
-function _refreshAllSheets() {
+async function _refreshAllSheets() {
+    const settings = _getSettings();
+
+    // Data Consistency: Clamp values if Max was reduced (GM Only)
+    if (game.user.isGM) {
+        const linkedActors = new Set(game.users.map(u => u.character).filter(a => a));
+
+        for (const actor of linkedActors) {
+            if (actor.type !== 'character') continue;
+
+            const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
+            const effectiveMax = _getActorMax(actor, settings.max);
+
+            if (current > effectiveMax) {
+                await actor.setFlag(MODULE_ID, FLAG_KEY, effectiveMax);
+            }
+        }
+    }
+
     Object.values(ui.windows).forEach(app => {
         if (app.document?.documentName === 'Actor' && app.document?.type === 'character') {
             app.render(false);
