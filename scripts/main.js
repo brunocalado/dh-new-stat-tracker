@@ -114,6 +114,13 @@ Hooks.on('renderActorSheet', (app, html) => {
     }
 });
 
+// Sleek UI Module Support
+Hooks.on('renderSleekCharacterSheet', (app, _html) => {
+    const actor = app.document;
+    if (!actor || actor.type !== 'character') return;
+    requestAnimationFrame(() => _injectAttributeSleekUI(app.element, actor));
+});
+
 /* -------------------------------------------- */
 /* DOM Injection Logic                          */
 /* -------------------------------------------- */
@@ -200,6 +207,57 @@ function _injectAttribute(form, actor) {
     }
 }
 
+//Sleek UI Injector
+function _injectAttributeSleekUI(form, actor) {
+    if (!form || !actor) return;
+
+    const settings = _getSettings();
+    const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
+    const effectiveMax = _getActorMax(actor, settings.max);
+
+    // Target the .favorites div inside .sidebar-content
+    const favoritesEl = form.querySelector('.sidebar-content .favorites');
+    if (!favoritesEl) return;
+
+    const existingSection = form.querySelector('.dh-new-stat-tracker-section--sleek');
+
+    // Force Rebuild check
+    if (existingSection) {
+        const renderedMax = parseInt(existingSection.dataset.max || 0);
+        const renderedName = existingSection.dataset.name || '';
+        const renderedIcon = existingSection.dataset.icon || '';
+        const renderedColor = existingSection.style.getPropertyValue('--stat-color').trim();
+        const renderedInverted = existingSection.dataset.inverted === 'true';
+        const renderedGmOnly = existingSection.dataset.gmOnly === 'true';
+        const renderedUseThemeBg = existingSection.dataset.enableCustomBackground === 'true';
+        const renderedBgColor = existingSection.dataset.customBgColor || '';
+        const renderedEnableCustomBorder = existingSection.dataset.enableCustomBorder === 'true';
+        const renderedBorderColor = existingSection.dataset.customBorderColor || '';
+
+        if (renderedMax === effectiveMax &&
+            renderedName === settings.name &&
+            renderedIcon === settings.icon &&
+            renderedColor === settings.color &&
+            renderedInverted === settings.inverted &&
+            renderedGmOnly === settings.gmOnly &&
+            renderedUseThemeBg === settings.enableCustomBackground &&
+            (!settings.enableCustomBackground || renderedBgColor === settings.customBackgroundColor) &&
+            renderedEnableCustomBorder === settings.enableCustomBorder &&
+            (!settings.enableCustomBorder || renderedBorderColor === settings.customBorderColor)) {
+            _updateVisuals(existingSection, current, effectiveMax, settings.icon, settings.inverted);
+            return;
+        }
+        existingSection.remove();
+    }
+
+    const newSection = _buildAttributeSection(current, actor.isOwner, 'sleek', settings, effectiveMax);
+    _attachListeners(newSection, actor, effectiveMax);
+
+    // Insert before .favorites so it sits between portrait and the equipment list
+    favoritesEl.insertAdjacentElement('beforebegin', newSection);
+}
+
+
 function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax) {
     const section = document.createElement('div');
     section.classList.add('dh-new-stat-tracker-section', `dh-new-stat-tracker-section--${layout}`);
@@ -244,6 +302,25 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
         pipsDiv.classList.add('attribute-pips');
         _renderPips(pipsDiv, effectiveMax, current, canInteract, settings.icon);
         contentWrapper.appendChild(pipsDiv);
+    } else if (layout === 'sleek') {
+        const labelDiv = document.createElement('div');
+        labelDiv.classList.add('stat-label');
+        labelDiv.textContent = settings.name;
+        contentWrapper.appendChild(labelDiv);
+
+        const pipsWrapper = document.createElement('div');
+        pipsWrapper.classList.add('attribute-pips-wrapper');
+
+        const PIPS_PER_ROW = 8;
+        for (let rowStart = 1; rowStart <= effectiveMax; rowStart += PIPS_PER_ROW) {
+            const rowEnd = Math.min(rowStart + PIPS_PER_ROW - 1, effectiveMax);
+            const rowDiv = document.createElement('div');
+            rowDiv.classList.add('attribute-pips');
+            _renderPips(rowDiv, rowEnd, current, canInteract, settings.icon, rowStart);
+            pipsWrapper.appendChild(rowDiv);
+        }
+        contentWrapper.appendChild(pipsWrapper);
+
     } else {
         const label = document.createElement('h4');
         label.textContent = settings.name;
@@ -269,10 +346,10 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
     return section;
 }
 
-function _renderPips(container, max, current, canInteract, iconClass) {
-    const activeIcon = iconClass || 'fa-solid fa-skull'; 
+function _renderPips(container, max, current, canInteract, iconClass, startAt = 1) {
+    const activeIcon = iconClass || 'fa-solid fa-skull';
     
-    for (let i = 1; i <= max; i++) {
+    for (let i = startAt; i <= max; i++) {
         const pip = document.createElement('span');
         pip.classList.add('attribute-pip');
         pip.dataset.value = String(i);

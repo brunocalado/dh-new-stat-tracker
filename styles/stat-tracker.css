@@ -368,6 +368,78 @@ input:checked + .slider:before {
     100% { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--stat-color), transparent 50%); }
 }
 
+/* Sleek UI layout */
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek {
+    margin: 4px auto 0 auto;
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    background: var(--gradient-card);
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-primary);
+}
+
+/* Push .favorites back down so it doesn't overlap our tracker */
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek + .favorites {
+    margin-top: 0;
+    padding-top: 8px;
+}
+
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .dh-filler-line {
+    display: none;
+}
+
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .dh-tracker-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .stat-label,
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek h4 {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin: 0;
+    border: none;
+}
+
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pips {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Pip icons inherit custom color, empty pips use Sleek UI's border color */
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pip .fa-regular {
+    color: var(--color-border);
+}
+
+/* Alert state glow uses the stat color */
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek.attribute-max {
+    box-shadow: 0px 0px 9px -1px var(--stat-color);
+    border-color: var(--stat-color);
+}
+
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pips-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pips-wrapper .attribute-pips {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
 /* ── CHAT CARD ────────────────────────────────────────────── */
 .dh-new-stat-tracker-chat-card {
     border: 2px solid #C9A060;
