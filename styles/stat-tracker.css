@@ -454,6 +454,8 @@ input:checked + .slider:before {
     height: 100%;
 }
 .tracker-status-wrapper .tracker-item {
+    display: flex;
+    flex-wrap: nowrap;
     align-items: center;
     margin-bottom: 5px;
     border-bottom: 1px solid #333;
@@ -473,7 +475,9 @@ input:checked + .slider:before {
     color: #777;
 }
 .tracker-status-wrapper .tracker-controls {
-    flex: 1;
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: nowrap;
     justify-content: flex-end;
     align-items: center;
     gap: 5px;
@@ -484,9 +488,10 @@ input:checked + .slider:before {
 }
 .tracker-status-wrapper .tracker-value {
     font-weight: bold;
-    min-width: 40px;
+    min-width: 60px;
     text-align: center;
     font-size: 1.2em;
+    white-space: nowrap;
 }
 .tracker-status-wrapper .tracker-config-row {
     width: 100%;
