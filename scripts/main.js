@@ -197,30 +197,52 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
 
     // Apply Styles based on settings
     section.style.setProperty('--stat-color', settings.color);
-
     section.style.setProperty('--stat-bg', settings.enableCustomBackground ? settings.customBackgroundColor : '#18162e');
     section.style.setProperty('--stat-border', settings.enableCustomBorder ? settings.customBorderColor : '#f3c267');
 
     const canInteract = settings.gmOnly ? game.user.isGM : isOwner;
 
+    // 1. Criar a Linha da Esquerda (Filler Line)
+    const leftLine = document.createElement('div');
+    leftLine.classList.add('dh-filler-line');
+    section.appendChild(leftLine);
+
+    // 2. Criar o Wrapper Central (Texto + Pips)
+    // Isso é CRUCIAL para manter o conteúdo junto no meio enquanto as linhas esticam
+    const contentWrapper = document.createElement('div');
+    contentWrapper.classList.add('dh-tracker-content-wrapper');
+
+    // -- Lógica de Conteúdo --
     if (layout === 'dhplus') {
         const labelDiv = document.createElement('div');
         labelDiv.classList.add('stat-label');
         labelDiv.textContent = settings.name;
-
-        section.appendChild(labelDiv);
+        contentWrapper.appendChild(labelDiv);
 
         const pipsDiv = document.createElement('div');
         pipsDiv.classList.add('attribute-pips');
         _renderPips(pipsDiv, effectiveMax, current, canInteract, settings.icon);
-
-        section.appendChild(pipsDiv);
+        contentWrapper.appendChild(pipsDiv);
     } else {
         const label = document.createElement('h4');
         label.textContent = settings.name;
-        section.appendChild(label);
-        _renderPips(section, effectiveMax, current, canInteract, settings.icon);
+        contentWrapper.appendChild(label);
+        
+        // Wrapper para pips no layout standard para consistência
+        const pipsContainer = document.createElement('div');
+        pipsContainer.classList.add('attribute-pips');
+        pipsContainer.style.display = 'flex';
+        pipsContainer.style.gap = '4px';
+        _renderPips(pipsContainer, effectiveMax, current, canInteract, settings.icon);
+        contentWrapper.appendChild(pipsContainer);
     }
+    
+    section.appendChild(contentWrapper);
+
+    // 3. Criar a Linha da Direita (Filler Line)
+    const rightLine = document.createElement('div');
+    rightLine.classList.add('dh-filler-line');
+    section.appendChild(rightLine);
 
     _updateMaxClass(section, current, effectiveMax, settings.inverted);
     return section;

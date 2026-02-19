@@ -175,8 +175,6 @@ input[type="color"].color-input {
 }
 
 /* ── MODERN TOGGLE SWITCH (FIXED LAYOUT) ───────────────────── */
-
-/* Override Foundry's default flex behavior for these specific groups */
 .form-group.custom-toggle-group {
     display: block !important;
 }
@@ -197,7 +195,6 @@ input[type="color"].color-input {
     display: none;
 }
 
-/* The track */
 .slider {
     position: relative;
     width: 46px;
@@ -209,7 +206,6 @@ input[type="color"].color-input {
     flex-shrink: 0;
 }
 
-/* The circle */
 .slider:before {
     position: absolute;
     content: "";
@@ -283,10 +279,9 @@ input:checked + .slider:before {
     border-color: var(--primary-accent);
 }
 
-/* ── SHEET INJECTION ───────────────────────────────────────── */
+/* ── SHEET INJECTION & DYNAMIC LINES ───────────────────────── */
 .daggerheart.sheet.actor .dh-new-stat-tracker-section {
     --stat-color: #e54e4e; 
-    /* Defaults - now controlled by JS injection style props */
     --stat-bg: #18162e;
     --stat-border: #f3c267;
 
@@ -296,16 +291,43 @@ input:checked + .slider:before {
     background-color: var(--stat-bg);
     border: 1px solid var(--stat-border);
     border-radius: 6px;
-    
     color: var(--stat-color);
+
+    /* Flexbox Layout para as Linhas de Preenchimento */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px; /* Espaço entre as linhas e o conteúdo */
+    overflow: hidden;
 }
+
 .daggerheart.sheet.actor .character-header-sheet .character-row { margin-bottom: 8px; }
 
+/* Wrapper Central que segura o Texto e os Pips */
+.dh-tracker-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-shrink: 0; /* Impede o conteúdo de ser esmagado pelas linhas */
+    white-space: nowrap; /* Impede quebra de linha indesejada */
+}
+
+/* A Linha Dinâmica (A "Mola") */
+.dh-filler-line {
+    flex-grow: 1; /* A MÁGICA: Cresce para ocupar espaço vazio */
+    height: 2px;  /* Espessura da linha */
+    background: linear-gradient(90deg, transparent, var(--stat-color), transparent);
+    opacity: 0.5;
+    min-width: 0; /* Permite que a linha desapareça totalmente se não houver espaço */
+    border-radius: 2px;
+}
+
 .daggerheart.sheet.actor .dh-new-stat-tracker-section--standard {
-    display: flex; gap: 10px; padding: 5px 10px; align-items: center; justify-content: center;
     width: 100%; 
     height: 30px;
     margin-top: 4px; margin-bottom: 8px; margin-left: 0px;
+    padding: 0 10px; /* Padding interno */
 }
 .daggerheart.sheet.actor .dh-new-stat-tracker-section--standard h4 {
     font-size: var(--font-size-14, 14px); font-weight: bold; text-transform: uppercase;
@@ -313,12 +335,10 @@ input:checked + .slider:before {
 }
 
 .daggerheart.sheet.actor .dh-new-stat-tracker-section--dhplus {
-    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;
     padding: 4px 8px; 
-    /*margin: 8px auto 4px auto;*/
 }
 .daggerheart.sheet.actor .dh-new-stat-tracker-section--dhplus .attribute-pips {
-    display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center;
+    display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; justify-content: center;
 }
 .daggerheart.sheet.actor .dh-new-stat-tracker-section--dhplus .stat-label {
     font-size: var(--font-size-12, 12px); font-weight: bold; text-transform: uppercase;
