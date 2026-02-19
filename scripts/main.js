@@ -123,15 +123,11 @@ function _injectAttribute(form, actor) {
     else {
         const coreStats = form.querySelector('.stats-row .core-stats');
         if (coreStats) {
-            targetContainer = coreStats;
+            const statsRow = coreStats.closest('.stats-row');
+            targetContainer = statsRow ? statsRow.parentElement : coreStats.parentElement;
             layoutType = 'dhplus';
-            const hopeStat = coreStats.querySelector('.stat-item.hope-stat');
-            if (hopeStat) {
-                insertionPoint = hopeStat;
-                insertMethod = 'after';
-            } else {
-                insertMethod = 'append';
-            }
+            insertionPoint = statsRow || coreStats;
+            insertMethod = 'after';
         }
     }
 
