@@ -293,33 +293,33 @@ input:checked + .slider:before {
     border-radius: 6px;
     color: var(--stat-color);
 
-    /* Flexbox Layout para as Linhas de Preenchimento */
+    /* Flexbox Layout for Filler Lines */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px; /* Espaço entre as linhas e o conteúdo */
+    gap: 8px; /* Space between lines and content */
     overflow: hidden;
 }
 
 .daggerheart.sheet.actor .character-header-sheet .character-row { margin-bottom: 8px; }
 
-/* Wrapper Central que segura o Texto e os Pips */
+/* Central Wrapper holding Text and Pips */
 .dh-tracker-content-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    flex-shrink: 0; /* Impede o conteúdo de ser esmagado pelas linhas */
-    white-space: nowrap; /* Impede quebra de linha indesejada */
+    flex-shrink: 0; /* Prevents content from being crushed by lines */
+    white-space: nowrap; /* Prevents unwanted line breaks */
 }
 
-/* A Linha Dinâmica (A "Mola") */
+/* The Dynamic Line (The "Spring") */
 .dh-filler-line {
-    flex-grow: 1; /* A MÁGICA: Cresce para ocupar espaço vazio */
-    height: 2px;  /* Espessura da linha */
+    flex-grow: 1; /* The MAGIC: Grows to occupy empty space */
+    height: 2px;  /* Line thickness */
     background: linear-gradient(90deg, transparent, var(--stat-color), transparent);
     opacity: 0.5;
-    min-width: 0; /* Permite que a linha desapareça totalmente se não houver espaço */
+    min-width: 0; /* Allows the line to disappear completely if there is no space */
     border-radius: 2px;
 }
 
@@ -327,13 +327,14 @@ input:checked + .slider:before {
     width: 100%; 
     height: 30px;
     margin-top: 4px; margin-bottom: 8px; margin-left: 0px;
-    padding: 0 10px; /* Padding interno */
+    padding: 0 10px; /* Internal padding */
 }
 .daggerheart.sheet.actor .dh-new-stat-tracker-section--standard h4 {
     font-size: var(--font-size-14, 14px); font-weight: bold; text-transform: uppercase;
     color: var(--stat-color); margin: 0; line-height: 1;
 }
 
+/* DaggerheartPlus Module Support: Specific styles for the DH+ sheet layout */
 .daggerheart.sheet.actor .dh-new-stat-tracker-section--dhplus {
     padding: 4px 8px; 
 }

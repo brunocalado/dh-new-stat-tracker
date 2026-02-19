@@ -1,10 +1,10 @@
 /**
- * Lógica Principal (Runtime)
- * Responsável por:
+ * Main Logic (Runtime)
+ * Responsible for:
  * 1. Hooks (Init, Render, Update, Create).
- * 2. Manipulação do DOM (Injeção na ficha).
- * 3. Lógica de Negócio (Updates, Cards de Chat).
- * 4. Aplicações Operacionais (Status e Config por Ator).
+ * 2. DOM Manipulation (Sheet injection).
+ * 3. Business Logic (Updates, Chat Cards).
+ * 4. Operational Applications (Status and Config per Actor).
  */
 
 import { MODULE_ID, FLAG_KEY, MAX_POSSIBLE_VALUE, registerModuleSettings, registerDaggerheartMenuButton } from './config.js';
@@ -21,7 +21,7 @@ Hooks.once('init', () => {
 });
 
 /* -------------------------------------------- */
-/* Helpers de Runtime                          */
+/* Runtime Helpers                              */
 /* -------------------------------------------- */
 
 function _getSettings() {
@@ -66,7 +66,7 @@ function _getActorMax(actor, globalMax) {
 }
 
 /* -------------------------------------------- */
-/* Hooks: Criação e Renderização                */
+/* Hooks: Creation and Rendering                */
 /* -------------------------------------------- */
 
 Hooks.on('preCreateActor', (actor, _data, _options, _userId) => {
@@ -87,6 +87,7 @@ const renderHook = (app, _html) => {
 };
 
 Hooks.on('renderCharacterSheet', renderHook);
+// DaggerheartPlus Module Support: Hook to render the tracker on the DH+ character sheet
 Hooks.on('renderDaggerheartPlusCharacterSheet', renderHook);
 Hooks.on('renderActorSheet', (app, html) => {
     if (app.document?.type === 'character' && 
@@ -96,7 +97,7 @@ Hooks.on('renderActorSheet', (app, html) => {
 });
 
 /* -------------------------------------------- */
-/* Lógica de Injeção no DOM                     */
+/* DOM Injection Logic                          */
 /* -------------------------------------------- */
 
 function _injectAttribute(form, actor) {
@@ -120,6 +121,7 @@ function _injectAttribute(form, actor) {
         insertMethod = 'after'; 
     } 
     // 2. Try DH+ Sheet
+    // DaggerheartPlus Module Support: Detects the specific header structure of the DH+ sheet to inject the tracker
     else {
         const headerMain = form.querySelector('.header-main-section');
         if (headerMain) {
@@ -134,7 +136,7 @@ function _injectAttribute(form, actor) {
 
     const existingSection = targetContainer.querySelector(`.dh-new-stat-tracker-section`);
 
-    // Force Rebuild check (otimização de render)
+    // Force Rebuild check (render optimization)
     if (existingSection) {
         const renderedMax = parseInt(existingSection.dataset.max || 0);
         const renderedName = existingSection.dataset.name || '';
@@ -147,7 +149,7 @@ function _injectAttribute(form, actor) {
         const renderedEnableCustomBorder = existingSection.dataset.enableCustomBorder === 'true';
         const renderedBorderColor = existingSection.dataset.customBorderColor || '';
 
-        // Se nada mudou, apenas atualiza visualmente os pips
+        // If nothing changed, only visually update the pips
         if (renderedMax === effectiveMax &&
             renderedName === settings.name &&
             renderedIcon === settings.icon &&
@@ -202,17 +204,18 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
 
     const canInteract = settings.gmOnly ? game.user.isGM : isOwner;
 
-    // 1. Criar a Linha da Esquerda (Filler Line)
+    // 1. Create Left Line (Filler Line)
     const leftLine = document.createElement('div');
     leftLine.classList.add('dh-filler-line');
     section.appendChild(leftLine);
 
-    // 2. Criar o Wrapper Central (Texto + Pips)
-    // Isso é CRUCIAL para manter o conteúdo junto no meio enquanto as linhas esticam
+    // 2. Create Central Wrapper (Text + Pips)
+    // This is CRITICAL to keep content together in the middle while lines stretch
     const contentWrapper = document.createElement('div');
     contentWrapper.classList.add('dh-tracker-content-wrapper');
 
-    // -- Lógica de Conteúdo --
+    // -- Content Logic --
+    // DaggerheartPlus Module Support: Generates a specific layout (Label + Pips) for the DH+ sheet
     if (layout === 'dhplus') {
         const labelDiv = document.createElement('div');
         labelDiv.classList.add('stat-label');
@@ -228,7 +231,7 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
         label.textContent = settings.name;
         contentWrapper.appendChild(label);
         
-        // Wrapper para pips no layout standard para consistência
+        // Wrapper for pips in standard layout for consistency
         const pipsContainer = document.createElement('div');
         pipsContainer.classList.add('attribute-pips');
         pipsContainer.style.display = 'flex';
@@ -239,7 +242,7 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
     
     section.appendChild(contentWrapper);
 
-    // 3. Criar a Linha da Direita (Filler Line)
+    // 3. Create Right Line (Filler Line)
     const rightLine = document.createElement('div');
     rightLine.classList.add('dh-filler-line');
     section.appendChild(rightLine);
@@ -419,7 +422,7 @@ Hooks.on('updateActor', (actor, changes, _options, userId) => {
     }
 });
 
-// ... classes de aplicação TrackerStatusApp e TrackerConfigApp permanecem inalteradas ...
+// ... TrackerStatusApp and TrackerConfigApp application classes remain unchanged ...
 class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
     static DEFAULT_OPTIONS = {
         id: "tracker-status-app",

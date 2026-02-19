@@ -1,15 +1,15 @@
 /**
- * Configurações, Constantes e Definições Estáticas
- * Responsável por:
- * 1. Definir constantes globais do módulo.
- * 2. Registrar settings no Foundry VTT.
- * 3. Gerenciar o Menu de Configurações (UI).
- * 4. Integrações com a UI do Sistema (Botões de Menu).
+ * Settings, Constants, and Static Definitions
+ * Responsible for:
+ * 1. Defining global module constants.
+ * 2. Registering settings in Foundry VTT.
+ * 3. Managing the Settings Menu (UI).
+ * 4. Integrations with System UI (Menu Buttons).
  */
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-// Constantes Exportadas
+// Exported Constants
 export const MODULE_ID = 'dh-new-stat-tracker';
 export const FLAG_KEY  = 'value';
 export const MAX_POSSIBLE_VALUE = 15;
@@ -34,7 +34,7 @@ export const AVAILABLE_ICONS = [
     "fa-solid fa-link", "fa-solid fa-gears", "fa-solid fa-user-shield", "fa-solid fa-burst", "fa-solid fa-chess-knight"
 ];
 
-// Helper para gerar lista de ícones para o select
+// Helper to generate icon list for the select
 function _getIconChoices() {
     return AVAILABLE_ICONS.reduce((acc, icon) => {
         const value = icon;
@@ -45,10 +45,10 @@ function _getIconChoices() {
 }
 
 /**
- * Aplicação de Menu para configurações completas
+ * Menu Application for complete settings
  */
 class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
-    // Callback estático para disparar refresh ao salvar
+    // Static callback to trigger refresh on save
     static onSaveCallback = null;
 
     static DEFAULT_OPTIONS = {
@@ -209,7 +209,7 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
 }
 
 /**
- * Registra o botão no menu lateral do sistema Daggerheart.
+ * Registers the button in the Daggerheart system sidebar menu.
  */
 export function registerDaggerheartMenuButton() {
     Hooks.on("renderDaggerheartMenu", (app, element, data) => {
@@ -243,8 +243,8 @@ export function registerDaggerheartMenuButton() {
 }
 
 /**
- * Registra todas as configurações do módulo.
- * @param {Function} refreshCallback - Função a ser chamada quando configurações visuais mudam.
+ * Registers all module settings.
+ * @param {Function} refreshCallback - Function called when visual settings change.
  */
 export function registerModuleSettings(refreshCallback) {
     TrackerSettingsApp.onSaveCallback = refreshCallback;
