@@ -121,12 +121,11 @@ function _injectAttribute(form, actor) {
     } 
     // 2. Try DH+ Sheet
     else {
-        const coreStats = form.querySelector('.stats-row .core-stats');
-        if (coreStats) {
-            const statsRow = coreStats.closest('.stats-row');
-            targetContainer = statsRow ? statsRow.parentElement : coreStats.parentElement;
+        const headerMain = form.querySelector('.header-main-section');
+        if (headerMain) {
+            targetContainer = headerMain.parentElement;
             layoutType = 'dhplus';
-            insertionPoint = statsRow || coreStats;
+            insertionPoint = headerMain;
             insertMethod = 'after';
         }
     }
@@ -205,16 +204,17 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
     const canInteract = settings.gmOnly ? game.user.isGM : isOwner;
 
     if (layout === 'dhplus') {
-        const pipsDiv = document.createElement('div');
-        pipsDiv.classList.add('attribute-pips');
-        _renderPips(pipsDiv, effectiveMax, current, canInteract, settings.icon);
-
         const labelDiv = document.createElement('div');
         labelDiv.classList.add('stat-label');
         labelDiv.textContent = settings.name;
 
-        section.appendChild(pipsDiv);
         section.appendChild(labelDiv);
+
+        const pipsDiv = document.createElement('div');
+        pipsDiv.classList.add('attribute-pips');
+        _renderPips(pipsDiv, effectiveMax, current, canInteract, settings.icon);
+
+        section.appendChild(pipsDiv);
     } else {
         const label = document.createElement('h4');
         label.textContent = settings.name;
