@@ -560,7 +560,7 @@ class TrackerConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
         const newEffectiveMax = settings.max + modifier;
         if (newEffectiveMax < 1) return;
-        if (newEffectiveMax > MAX_POSSIBLE_VALUE) return;
+        if (action === 'increase' && newEffectiveMax > MAX_POSSIBLE_VALUE) return;
 
         await actor.setFlag(MODULE_ID, 'maxModifier', modifier);
 
