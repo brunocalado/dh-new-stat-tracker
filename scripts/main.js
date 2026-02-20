@@ -34,6 +34,7 @@ function _getSettings() {
         gmOnly: game.settings.get(MODULE_ID, 'gmOnly') || false,
         icon: game.settings.get(MODULE_ID, 'attributeIcon') || 'fa-solid fa-skull',
         color: game.settings.get(MODULE_ID, 'attributeColor') || '#e54e4e',
+        iconColor: game.settings.get(MODULE_ID, 'iconColor') || '#e54e4e',
         // Background Logic
         enableCustomBackground: game.settings.get(MODULE_ID, 'enableCustomBackground') || false,
         customBackgroundColor: game.settings.get(MODULE_ID, 'customBackgroundColor') || '#18162e',
@@ -167,6 +168,7 @@ function _injectAttribute(form, actor) {
         const renderedName = existingSection.dataset.name || '';
         const renderedIcon = existingSection.dataset.icon || '';
         const renderedColor = existingSection.style.getPropertyValue('--stat-color').trim();
+        const renderedIconColor = existingSection.style.getPropertyValue('--stat-icon-color').trim();
         const renderedInverted = existingSection.dataset.inverted === 'true';
         const renderedGmOnly = existingSection.dataset.gmOnly === 'true';
         const renderedUseThemeBg = existingSection.dataset.enableCustomBackground === 'true';
@@ -179,6 +181,7 @@ function _injectAttribute(form, actor) {
             renderedName === settings.name &&
             renderedIcon === settings.icon &&
             renderedColor === settings.color &&
+            renderedIconColor === settings.iconColor &&
             renderedInverted === settings.inverted &&
             renderedGmOnly === settings.gmOnly &&
             renderedUseThemeBg === settings.enableCustomBackground &&
@@ -227,6 +230,7 @@ function _injectAttributeSleekUI(form, actor) {
         const renderedName = existingSection.dataset.name || '';
         const renderedIcon = existingSection.dataset.icon || '';
         const renderedColor = existingSection.style.getPropertyValue('--stat-color').trim();
+        const renderedIconColor = existingSection.style.getPropertyValue('--stat-icon-color').trim();
         const renderedInverted = existingSection.dataset.inverted === 'true';
         const renderedGmOnly = existingSection.dataset.gmOnly === 'true';
         const renderedUseThemeBg = existingSection.dataset.enableCustomBackground === 'true';
@@ -238,6 +242,7 @@ function _injectAttributeSleekUI(form, actor) {
             renderedName === settings.name &&
             renderedIcon === settings.icon &&
             renderedColor === settings.color &&
+            renderedIconColor === settings.iconColor &&
             renderedInverted === settings.inverted &&
             renderedGmOnly === settings.gmOnly &&
             renderedUseThemeBg === settings.enableCustomBackground &&
@@ -275,6 +280,7 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
 
     // Apply Styles based on settings
     section.style.setProperty('--stat-color', settings.color);
+    section.style.setProperty('--stat-icon-color', settings.iconColor);
     section.style.setProperty('--stat-bg', settings.enableCustomBackground ? settings.customBackgroundColor : '#18162e');
     section.style.setProperty('--stat-border', settings.enableCustomBorder ? settings.customBorderColor : '#f3c267');
 

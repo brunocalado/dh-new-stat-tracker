@@ -285,6 +285,7 @@ input:checked + .slider {
 .daggerheart.sheet.actor {
     & .dh-new-stat-tracker-section {
         --stat-color: #e54e4e;
+        --stat-icon-color: #e54e4e;
         --stat-bg: #18162e;
         --stat-border: #f3c267;
 
@@ -305,12 +306,12 @@ input:checked + .slider {
 
         & .attribute-pip {
             display: flex; align-items: center; justify-content: center; cursor: pointer;
-            color: var(--stat-color); font-size: var(--font-size-14, 14px);
+            color: var(--stat-icon-color); font-size: var(--font-size-14, 14px);
             transition: transform 0.1s ease, color 0.1s ease;
             user-select: none; width: 16px; height: 16px;
 
             &:hover {
-                transform: scale(1.25); color: color-mix(in srgb, var(--stat-color), white 40%);
+                transform: scale(1.25); color: color-mix(in srgb, var(--stat-icon-color), white 40%);
             }
 
             &.no-interact {

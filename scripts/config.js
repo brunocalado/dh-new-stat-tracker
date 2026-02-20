@@ -69,6 +69,7 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             attributeMax: game.settings.get(MODULE_ID, 'attributeMax'),
             attributeInverted: game.settings.get(MODULE_ID, 'attributeInverted'),
             attributeColor: game.settings.get(MODULE_ID, 'attributeColor'),
+            iconColor: game.settings.get(MODULE_ID, 'iconColor'),
             attributeIcon: game.settings.get(MODULE_ID, 'attributeIcon'),
             
             // Background Settings
@@ -179,6 +180,7 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             await game.settings.set(MODULE_ID, 'attributeMax', parseInt(formData.get('attributeMax')));
             await game.settings.set(MODULE_ID, 'attributeInverted', formData.get('attributeInverted') === 'on');
             await game.settings.set(MODULE_ID, 'attributeColor', formData.get('attributeColor'));
+            await game.settings.set(MODULE_ID, 'iconColor', formData.get('iconColor'));
             await game.settings.set(MODULE_ID, 'attributeIcon', formData.get('attributeIcon'));
             
             // Background
@@ -256,6 +258,7 @@ export function registerModuleSettings(refreshCallback) {
         ['attributeInverted', Boolean, false],
         ['attributeIcon', String, 'fa-solid fa-skull'],
         ['attributeColor', String, '#e54e4e'],
+        ['iconColor', String, '#e54e4e'],
         // Background Settings
         ['enableCustomBackground', Boolean, false],
         ['customBackgroundColor', String, '#18162e'],
