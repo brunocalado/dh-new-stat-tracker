@@ -148,6 +148,10 @@
                             <option value="hpMax" {{#if (eq this.target "hpMax")}}selected{{/if}}>HP Max</option>
                             <option value="attackBonus" {{#if (eq this.target "attackBonus")}}selected{{/if}}>Attack Bonus</option>
                             <option value="critical" {{#if (eq this.target "critical")}}selected{{/if}}>Critical</option>
+                            <option value="physicalDmg" {{#if (eq this.target "physicalDmg")}}selected{{/if}}>Physical Damage</option>
+                            <option value="magicalDmg" {{#if (eq this.target "magicalDmg")}}selected{{/if}}>Magical Damage</option>
+                            <option value="majorThreshold" {{#if (eq this.target "majorThreshold")}}selected{{/if}}>Major Threshold</option>
+                            <option value="severeThreshold" {{#if (eq this.target "severeThreshold")}}selected{{/if}}>Severe Threshold</option>
                         </select>
                         <select class="rule-action" name="ruleAction">
                             <option value="add" {{#if (eq this.action "add")}}selected{{/if}}>Add</option>

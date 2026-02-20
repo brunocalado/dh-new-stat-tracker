@@ -196,6 +196,7 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
                         <option value="hope">Hope Max</option>
                         <option value="hpMax">HP Max</option>
                         <option value="stressMax">Stress Max</option>
+                        <option value="scars">Scars</option>
                     </select>
                     <select class="rule-action" name="ruleAction">
                         <option value="add">Add</option>
@@ -357,6 +358,10 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
                         <option value="hpMax">HP Max</option>
                         <option value="attackBonus">Attack Bonus</option>
                         <option value="critical">Critical</option>
+                        <option value="physicalDmg">Physical Damage</option>
+                        <option value="magicalDmg">Magical Damage</option>
+                        <option value="majorThreshold">Major Threshold</option>
+                        <option value="severeThreshold">Severe Threshold</option>
                     </select>
                     <select class="rule-action" name="ruleAction">
                         <option value="add">Add</option>

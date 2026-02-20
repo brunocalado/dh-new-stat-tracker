@@ -81,7 +81,8 @@ function _getAdvSettings() {
 const RULE_TARGET_MAP = {
     hope:      { key: 'system.resources.hope.max',      name: 'DHStatTracker: Hope' },
     hpMax:     { key: 'system.resources.hitPoints.max',  name: 'DHStatTracker: HP' },
-    stressMax: { key: 'system.resources.stress.max',     name: 'DHStatTracker: Stress' }
+    stressMax: { key: 'system.resources.stress.max',     name: 'DHStatTracker: Stress' },
+    scars:     { key: 'system.scars',                    name: 'DHStatTracker: Scars' }
 };
 
 const ADV_RULE_TARGET_MAP = {
