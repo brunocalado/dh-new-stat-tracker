@@ -85,10 +85,14 @@ const RULE_TARGET_MAP = {
 };
 
 const ADV_RULE_TARGET_MAP = {
-    stressMax:   { key: 'system.resources.stress.max',         name: 'DHStatTracker: Stress' },
-    hpMax:       { key: 'system.resources.hitPoints.max',      name: 'DHStatTracker: HP' },
-    attackBonus: { key: 'system.bonuses.roll.attack.bonus',    name: 'DHStatTracker: Attack Bonus' },
-    critical:    { key: 'system.criticalThreshold',            name: 'DHStatTracker: Critical', invertAction: true }
+    stressMax:      { key: 'system.resources.stress.max',           name: 'DHStatTracker: Stress' },
+    hpMax:          { key: 'system.resources.hitPoints.max',        name: 'DHStatTracker: HP' },
+    attackBonus:    { key: 'system.bonuses.roll.attack.bonus',      name: 'DHStatTracker: Attack Bonus' },
+    critical:       { key: 'system.criticalThreshold',              name: 'DHStatTracker: Critical', invertAction: true },
+    physicalDmg:    { key: 'system.bonuses.damage.physical.bonus',  name: 'DHStatTracker: Physical Damage' },
+    magicalDmg:     { key: 'system.bonuses.damage.magical.bonus',   name: 'DHStatTracker: Magical Damage' },
+    majorThreshold: { key: 'system.damageThresholds.major',         name: 'DHStatTracker: Major Threshold' },
+    severeThreshold:{ key: 'system.damageThresholds.severe',        name: 'DHStatTracker: Severe Threshold' }
 };
 
 function _getRules() {
