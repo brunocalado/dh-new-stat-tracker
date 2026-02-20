@@ -12,6 +12,9 @@ A configurable custom attribute tracker for character sheets.
 *   **Visual Customization:** Choose from over 60 icons, custom colors, and backgrounds.
 *   **Immersive Feedback:** Plays sounds and sends chat alerts when values change or reach limits.
 *   **GM Dashboard:** A central menu for GMs to monitor and manage all players' stats.
+*   **Adversary Support:** Dedicated tracker for Adversaries with independent settings.
+*   **Automation Rules:** Trigger changes to HP, Stress, or other stats based on tracker events.
+*   **Macro Support:** Update tracker values via macro.
 
 # How To 
 
@@ -30,11 +33,11 @@ DHStatTracker.openManager();
 ## Macro to Modify Actors
 
 ```js
-DHStatTracker.updateActor({value: 1}); // This will add 1 to the tracker of the selected token.
+DHStatTracker.updateActor({value: 1}); // Increments the tracker of the selected token by 1.
 ```
 
 ```js
-DHStatTracker.updateActor({value: -1});  // This will remove 1 to the tracker of the selected token.
+DHStatTracker.updateActor({value: -1});  // Decrements the tracker of the selected token by 1.
 ```
 
 # Configuration
@@ -67,3 +70,28 @@ Navigate to **Settings** → **Configure Settings** → **Module Settings** → 
 **Disclaimer:** This module is an independent creation and is not affiliated with Darrington Press.
 
 **Disclaimer:** This is a fork from this [Link](https://github.com/Tristyn159/daggerheart-foundry-tools/tree/Main/modules/new-stat-tracker).
+
+# 🧰 My Daggerheart Modules
+
+| Module | Description |
+| :--- | :--- |
+| 💀 [**Adversary Manager**](https://github.com/brunocalado/daggerheart-advmanager) | Scale adversaries instantly and build balanced encounters in Foundry VTT. |
+| 💥 [**Critical**](https://github.com/brunocalado/daggerheart-critical) | Animated Critical. |
+| 💠 [**Custom Stat Tracker**](https://github.com/brunocalado/dh-new-stat-tracker) | Add custom trackers to actors. |
+| ☠️ [**Death Moves**](https://github.com/brunocalado/daggerheart-death-moves) | Enhances the Death Move moment with immersive audio and visual effects. |
+| 📏 [**Distances**](https://github.com/brunocalado/daggerheart-distances) | Visualizes combat ranges with customizable rings and hover calculations. |
+| 🤖 [**Fear Macros**](https://github.com/brunocalado/daggerheart-fear-macros) | Automatically executes macros when the Fear resource is changed. |
+| 😱 [**Fear Tracker**](https://github.com/brunocalado/daggerheart-fear-tracker) | Adds an animated slider bar with configurable fear tokens to the UI. |
+| 🎲 [**Stats**](https://github.com/brunocalado/daggerheart-stats) | Tracks dice rolls from GM and Players. |
+| 🧠 [**Stats Toolbox**](https://github.com/brunocalado/dh-statblock-importer) | Import using a statblock. |
+| 🛒 [**Store**](https://github.com/brunocalado/daggerheart-store) | A dynamic, interactive, and fully configurable store for Foundry VTT. |
+| 📦 [**Extra Content**](https://github.com/brunocalado/daggerheart-extra-content) | Homebrew for Daggerheart. |
+| ⚡ [**Quick Actions**](https://github.com/brunocalado/daggerheart-quickactions) | Quick access to common mechanics like Falling Damage, Downtime, etc. |
+| 📜 [**Quick Rules**](https://github.com/brunocalado/daggerheart-quickrules) | Fast and accessible reference guide for the core rules. |
+
+# 🗺️ Adventures
+
+| Adventure | Description |
+| :--- | :--- |
+| ✨ [**I Wish**](https://github.com/brunocalado/i-wish-daggerheart-adventure) | A wealthy merchant is cursed; one final expedition may be the only hope. |
+| 💣 [**Suicide Squad**](https://github.com/brunocalado/suicide-squad-daggerheart-adventure) | Criminals forced to serve a ruthless master in a land on the brink of war. |
