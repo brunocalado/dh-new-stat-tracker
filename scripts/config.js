@@ -12,7 +12,9 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 // Exported Constants
 export const MODULE_ID = 'dh-new-stat-tracker';
 export const FLAG_KEY  = 'value';
+export const ADV_FLAG_KEY = 'adversaryValue';
 export const MAX_POSSIBLE_VALUE = 15;
+export const ADV_MAX_POSSIBLE_VALUE = 9;
 
 export const AVAILABLE_ICONS = [
     "",
@@ -261,6 +263,152 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
 }
 
 /**
+ * Menu Application for adversary tracker settings (simplified: Identity + Mechanics only)
+ */
+class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
+    static onSaveCallback = null;
+
+    static DEFAULT_OPTIONS = {
+        id: "adversary-tracker-settings-app",
+        tag: "form",
+        window: { title: "Adversary Tracker Configuration", resizable: true },
+        position: { width: 570, height: 500 }
+    };
+
+    static PARTS = {
+        content: { template: `modules/${MODULE_ID}/templates/adversary-settings-menu.hbs` }
+    };
+
+    async _prepareContext(_options) {
+        return {
+            attributeName: game.settings.get(MODULE_ID, 'advAttributeName'),
+            attributeMax: game.settings.get(MODULE_ID, 'advAttributeMax'),
+            attributeInverted: game.settings.get(MODULE_ID, 'advAttributeInverted'),
+            attributeColor: game.settings.get(MODULE_ID, 'advAttributeColor'),
+            iconColor: game.settings.get(MODULE_ID, 'advIconColor'),
+            attributeIcon: game.settings.get(MODULE_ID, 'advAttributeIcon'),
+            enableCustomBackground: game.settings.get(MODULE_ID, 'advEnableCustomBackground'),
+            customBackgroundColor: game.settings.get(MODULE_ID, 'advCustomBackgroundColor'),
+            enableCustomBorder: game.settings.get(MODULE_ID, 'advEnableCustomBorder'),
+            customBorderColor: game.settings.get(MODULE_ID, 'advCustomBorderColor'),
+            advTrackerRules: JSON.parse(game.settings.get(MODULE_ID, 'advTrackerRules') || '[]'),
+            iconChoices: _getIconChoices(),
+            maxPossible: ADV_MAX_POSSIBLE_VALUE
+        };
+    }
+
+    _onRender(context, options) {
+        // --- TAB SWITCHING LOGIC ---
+        const navItems = this.element.querySelectorAll('.tracker-nav .item');
+        const tabItems = this.element.querySelectorAll('.tab-content .tab');
+
+        navItems.forEach(nav => {
+            nav.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetTab = nav.dataset.tab;
+                navItems.forEach(n => n.classList.toggle('active', n.dataset.tab === targetTab));
+                tabItems.forEach(t => t.classList.toggle('active', t.dataset.tab === targetTab));
+            });
+        });
+
+        // --- CUSTOM BACKGROUND TOGGLE LOGIC ---
+        const bgToggle = this.element.querySelector('input[name="enableCustomBackground"]');
+        const bgPickerContainer = this.element.querySelector('.custom-bg-picker-container');
+
+        if (bgToggle && bgPickerContainer) {
+            const updateVisibility = () => {
+                bgPickerContainer.classList.toggle('visible', bgToggle.checked);
+            };
+            updateVisibility();
+            bgToggle.addEventListener('change', updateVisibility);
+        }
+
+        // --- CUSTOM BORDER TOGGLE LOGIC ---
+        const borderToggle = this.element.querySelector('input[name="enableCustomBorder"]');
+        const borderPickerContainer = this.element.querySelector('.custom-border-picker-container');
+
+        if (borderToggle && borderPickerContainer) {
+            const updateBorderVisibility = () => {
+                borderPickerContainer.classList.toggle('visible', borderToggle.checked);
+            };
+            updateBorderVisibility();
+            borderToggle.addEventListener('change', updateBorderVisibility);
+        }
+
+        // --- RULES TAB LOGIC ---
+        const rulesList = this.element.querySelector('.rules-list');
+        const addRuleBtn = this.element.querySelector('.rule-add-btn');
+
+        if (addRuleBtn && rulesList) {
+            addRuleBtn.addEventListener('click', () => {
+                const ruleId = foundry.utils.randomID();
+                const row = document.createElement('div');
+                row.classList.add('rule-row');
+                row.dataset.ruleId = ruleId;
+                row.innerHTML = `
+                    <select class="rule-trigger" name="ruleTrigger">
+                        <option value="mark">On Mark</option>
+                        <option value="unmark">On Unmark</option>
+                        <option value="maximum">On Maximum</option>
+                        <option value="minimum">On Minimum</option>
+                    </select>
+                    <select class="rule-target" name="ruleTarget">
+                        <option value="stressMax">Stress Max</option>
+                        <option value="hpMax">HP Max</option>
+                        <option value="attackBonus">Attack Bonus</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                    <select class="rule-action" name="ruleAction">
+                        <option value="add">Add</option>
+                        <option value="remove">Remove</option>
+                    </select>
+                    <button type="button" class="rule-delete" title="Delete Rule"><i class="fas fa-trash"></i></button>
+                `;
+                rulesList.appendChild(row);
+                row.querySelector('.rule-delete').addEventListener('click', () => row.remove());
+            });
+
+            rulesList.querySelectorAll('.rule-delete').forEach(btn => {
+                btn.addEventListener('click', () => btn.closest('.rule-row').remove());
+            });
+        }
+
+        // Form Submission
+        this.element.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            await game.settings.set(MODULE_ID, 'advAttributeName', formData.get('attributeName'));
+            await game.settings.set(MODULE_ID, 'advAttributeMax', Math.min(ADV_MAX_POSSIBLE_VALUE, parseInt(formData.get('attributeMax'))));
+            await game.settings.set(MODULE_ID, 'advAttributeInverted', formData.get('attributeInverted') === 'on');
+            await game.settings.set(MODULE_ID, 'advAttributeColor', formData.get('attributeColor'));
+            await game.settings.set(MODULE_ID, 'advIconColor', formData.get('iconColor'));
+            await game.settings.set(MODULE_ID, 'advAttributeIcon', formData.get('attributeIcon'));
+            await game.settings.set(MODULE_ID, 'advEnableCustomBackground', formData.get('enableCustomBackground') === 'on');
+            await game.settings.set(MODULE_ID, 'advCustomBackgroundColor', formData.get('customBackgroundColor'));
+            await game.settings.set(MODULE_ID, 'advEnableCustomBorder', formData.get('enableCustomBorder') === 'on');
+            await game.settings.set(MODULE_ID, 'advCustomBorderColor', formData.get('customBorderColor'));
+
+            // Rules
+            const ruleRows = this.element.querySelectorAll('.rule-row');
+            const rules = Array.from(ruleRows).map(row => ({
+                id: row.dataset.ruleId,
+                trigger: row.querySelector('.rule-trigger').value,
+                target: row.querySelector('.rule-target').value,
+                action: row.querySelector('.rule-action').value
+            }));
+            await game.settings.set(MODULE_ID, 'advTrackerRules', JSON.stringify(rules));
+
+            this.close();
+
+            if (AdversaryTrackerSettingsApp.onSaveCallback) {
+                AdversaryTrackerSettingsApp.onSaveCallback();
+            }
+        });
+    }
+}
+
+/**
  * Registers the button in the Daggerheart system sidebar menu.
  */
 export function registerDaggerheartMenuButton() {
@@ -284,7 +432,7 @@ export function registerDaggerheartMenuButton() {
         if (fieldset) {
             const newFieldset = document.createElement("fieldset");
             const legend = document.createElement("legend");
-            legend.innerText = "Custom Stat Tracker"; 
+            legend.innerText = "Custom Stat Tracker";
             newFieldset.appendChild(legend);
             newFieldset.appendChild(myButton);
             fieldset.after(newFieldset);
@@ -337,6 +485,33 @@ export function registerModuleSettings(refreshCallback) {
         });
     });
 
+    // --- ADVERSARY SETTINGS (Hidden from standard menu) ---
+    const advHiddenSettings = [
+        ['advAttributeName', String, 'Tracker'],
+        ['advAttributeMax', Number, 6],
+        ['advAttributeInverted', Boolean, false],
+        ['advAttributeIcon', String, 'fa-solid fa-skull'],
+        ['advAttributeColor', String, '#e54e4e'],
+        ['advIconColor', String, '#e54e4e'],
+        ['advEnableCustomBackground', Boolean, false],
+        ['advCustomBackgroundColor', String, '#18162e'],
+        ['advEnableCustomBorder', Boolean, false],
+        ['advCustomBorderColor', String, '#f3c267'],
+        ['advTrackerRules', String, '[]']
+    ];
+
+    advHiddenSettings.forEach(([key, type, defaultValue]) => {
+        game.settings.register(MODULE_ID, key, {
+            scope: 'world',
+            config: false,
+            type: type,
+            default: defaultValue,
+            onChange: refreshCallback
+        });
+    });
+
+    AdversaryTrackerSettingsApp.onSaveCallback = refreshCallback;
+
     // --- VISIBLE SETTINGS (Standard menu) ---
     game.settings.register(MODULE_ID, 'gmOnly', {
         name: 'GM Only Mode',
@@ -348,13 +523,22 @@ export function registerModuleSettings(refreshCallback) {
         onChange: refreshCallback
     });
 
-    // --- MENU BUTTON ---
+    // --- MENU BUTTONS ---
     game.settings.registerMenu(MODULE_ID, 'trackerSettingsMenu', {
         name: 'Configuration',
         label: 'Open Tracker Settings',
         hint: 'Configure attributes, visuals, sounds, and chat notifications.',
         icon: 'fas fa-cogs',
         type: TrackerSettingsApp,
+        restricted: true
+    });
+
+    game.settings.registerMenu(MODULE_ID, 'advTrackerSettingsMenu', {
+        name: 'Adversary Configuration',
+        label: 'Open Adversary Tracker Settings',
+        hint: 'Configure adversary tracker visuals and mechanics.',
+        icon: 'fas fa-cogs',
+        type: AdversaryTrackerSettingsApp,
         restricted: true
     });
 }

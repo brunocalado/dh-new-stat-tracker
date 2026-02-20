@@ -1,0 +1,174 @@
+<div class="tracker-settings-wrapper">
+
+    <!-- NAVIGATION TABS -->
+    <nav class="tracker-nav tabs">
+        <a class="item active" data-tab="identity"><i class="fas fa-fingerprint"></i> Identity</a>
+        <a class="item" data-tab="mechanics"><i class="fas fa-calculator"></i> Mechanics</a>
+        <a class="item" data-tab="rules"><i class="fas fa-cogs"></i> Rules</a>
+    </nav>
+
+    <!-- TAB CONTENT CONTAINER -->
+    <section class="tab-content">
+
+        <!-- =======================
+             TAB: IDENTITY
+             ======================= -->
+        <div class="tab active" data-tab="identity">
+
+            <div class="config-card">
+                <h3><i class="fas fa-eye"></i> Visual Identity</h3>
+
+                <div class="form-group">
+                    <label>Attribute Name</label>
+                    <input type="text" name="attributeName" value="{{attributeName}}" maxlength="14" placeholder="e.g. Despair, Stress, Corruption">
+                    <span class="hint">The name displayed on the adversary sheet (Max 14 chars).</span>
+                </div>
+
+                <div class="form-group">
+                     <label>Icon Style</label>
+                    <select name="attributeIcon">
+                        {{#each iconChoices}}
+                        <option value="{{this.value}}" {{#if (eq this.value ../attributeIcon)}}selected{{/if}}>{{this.label}}</option>
+                        {{/each}}
+                    </select>
+                    <span class="hint">Icon used for filled pips.</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Text Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" class="color-input" name="attributeColor" value="{{attributeColor}}">
+                    </div>
+                    <span class="hint">Color for the tracker label and filler lines.</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Icon Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" class="color-input" name="iconColor" value="{{iconColor}}">
+                    </div>
+                    <span class="hint">Color for the pip icons.</span>
+                </div>
+
+                <!-- Custom Background Section -->
+                <div class="form-group custom-toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enableCustomBackground" {{checked enableCustomBackground}}>
+                        <span class="slider"></span>
+                        <span class="toggle-label">Custom Background Color</span>
+                    </label>
+                    <span class="hint">
+                        <strong>OFF:</strong> Uses default dark blue (#18162e).<br>
+                        <strong>ON:</strong> Choose a specific color below.
+                    </span>
+                </div>
+
+                <!-- Hidden Color Picker (Toggled by JS) -->
+                <div class="form-group custom-bg-picker-container">
+                    <label>Background Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" class="color-input" name="customBackgroundColor" value="{{customBackgroundColor}}">
+                    </div>
+                </div>
+
+                <!-- Custom Border Section -->
+                <div class="form-group custom-toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enableCustomBorder" {{checked enableCustomBorder}}>
+                        <span class="slider"></span>
+                        <span class="toggle-label">Custom Border Color</span>
+                    </label>
+                    <span class="hint">
+                        <strong>OFF:</strong> Uses default gold (#f3c267).<br>
+                        <strong>ON:</strong> Choose a specific color below.
+                    </span>
+                </div>
+
+                <!-- Hidden Color Picker (Toggled by JS) -->
+                <div class="form-group custom-border-picker-container">
+                    <label>Border Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" class="color-input" name="customBorderColor" value="{{customBorderColor}}">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- =======================
+             TAB: MECHANICS
+             ======================= -->
+        <div class="tab" data-tab="mechanics">
+
+            <div class="config-card">
+                <h3><i class="fas fa-cogs"></i> Core Rules</h3>
+
+                <div class="form-group">
+                    <label>Maximum Value</label>
+                    <input type="number" name="attributeMax" value="{{attributeMax}}" min="1" max="{{maxPossible}}" step="1">
+                    <span class="hint">Default pip capacity for adversary trackers.</span>
+                </div>
+
+                <!-- Toggle Switch -->
+                <div class="form-group custom-toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="attributeInverted" {{checked attributeInverted}}>
+                        <span class="slider"></span>
+                        <span class="toggle-label">Invert Logic</span>
+                    </label>
+                    <span class="hint">
+                        <strong>OFF:</strong> Fills up (0 to Max). Alert at Max.<br>
+                        <strong>ON:</strong> Drains down (Max to 0). Alert at 0.
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- =======================
+             TAB: RULES
+             ======================= -->
+        <div class="tab" data-tab="rules">
+            <div class="config-card">
+                <h3><i class="fas fa-scroll"></i> Pip Event Rules</h3>
+                <span class="hint" style="margin-bottom: 10px; display: block;">
+                    Define rules that apply Active Effects to the adversary when pip events occur.
+                </span>
+
+                <div class="rules-list">
+                    {{#each advTrackerRules}}
+                    <div class="rule-row" data-rule-id="{{this.id}}">
+                        <select class="rule-trigger" name="ruleTrigger">
+                            <option value="mark" {{#if (eq this.trigger "mark")}}selected{{/if}}>On Mark</option>
+                            <option value="unmark" {{#if (eq this.trigger "unmark")}}selected{{/if}}>On Unmark</option>
+                            <option value="maximum" {{#if (eq this.trigger "maximum")}}selected{{/if}}>On Maximum</option>
+                            <option value="minimum" {{#if (eq this.trigger "minimum")}}selected{{/if}}>On Minimum</option>
+                        </select>
+                        <select class="rule-target" name="ruleTarget">
+                            <option value="stressMax" {{#if (eq this.target "stressMax")}}selected{{/if}}>Stress Max</option>
+                            <option value="hpMax" {{#if (eq this.target "hpMax")}}selected{{/if}}>HP Max</option>
+                            <option value="attackBonus" {{#if (eq this.target "attackBonus")}}selected{{/if}}>Attack Bonus</option>
+                            <option value="critical" {{#if (eq this.target "critical")}}selected{{/if}}>Critical</option>
+                        </select>
+                        <select class="rule-action" name="ruleAction">
+                            <option value="add" {{#if (eq this.action "add")}}selected{{/if}}>Add</option>
+                            <option value="remove" {{#if (eq this.action "remove")}}selected{{/if}}>Remove</option>
+                        </select>
+                        <button type="button" class="rule-delete" title="Delete Rule"><i class="fas fa-trash"></i></button>
+                    </div>
+                    {{/each}}
+                </div>
+
+                <button type="button" class="rule-add-btn">
+                    <i class="fas fa-plus"></i> Add Rule
+                </button>
+            </div>
+        </div>
+
+    </section>
+
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit">
+            <i class="far fa-save"></i> Save Configuration
+        </button>
+    </footer>
+</div>

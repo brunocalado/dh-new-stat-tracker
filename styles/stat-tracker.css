@@ -715,6 +715,24 @@ input:checked + .slider {
     }
 }
 
+/* ── ADVERSARY TRACKER LAYOUT ────────────────────────────── */
+.dh-new-stat-tracker-section--adversary {
+    width: 100%;
+    height: 30px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding: 0 10px;
+
+    & h4 {
+        font-size: var(--font-size-14, 14px);
+        font-weight: bold;
+        text-transform: uppercase;
+        color: var(--stat-color);
+        margin: 0;
+        line-height: 1;
+    }
+}
+
 /* ── DAGGERHEART MENU BUTTON ─────────────────────────────── */
 .dh-new-stat-tracker-menu-btn {
     margin-top: 10px;

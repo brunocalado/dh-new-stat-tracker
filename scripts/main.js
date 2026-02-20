@@ -7,7 +7,7 @@
  * 4. Operational Applications (Status and Config per Actor).
  */
 
-import { MODULE_ID, FLAG_KEY, MAX_POSSIBLE_VALUE, registerModuleSettings, registerDaggerheartMenuButton } from './config.js';
+import { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, registerModuleSettings, registerDaggerheartMenuButton } from './config.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -56,6 +56,24 @@ function _getSettings() {
     };
 }
 
+function _getAdvSettings() {
+    const rawName = game.settings.get(MODULE_ID, 'advAttributeName') || 'Tracker';
+
+    return {
+        name: rawName.substring(0, 14),
+        max: Math.max(1, Math.min(ADV_MAX_POSSIBLE_VALUE, game.settings.get(MODULE_ID, 'advAttributeMax') || 6)),
+        inverted: game.settings.get(MODULE_ID, 'advAttributeInverted') || false,
+        gmOnly: true,
+        icon: game.settings.get(MODULE_ID, 'advAttributeIcon') || 'fa-solid fa-skull',
+        color: game.settings.get(MODULE_ID, 'advAttributeColor') || '#e54e4e',
+        iconColor: game.settings.get(MODULE_ID, 'advIconColor') || '#e54e4e',
+        enableCustomBackground: game.settings.get(MODULE_ID, 'advEnableCustomBackground') || false,
+        customBackgroundColor: game.settings.get(MODULE_ID, 'advCustomBackgroundColor') || '#18162e',
+        enableCustomBorder: game.settings.get(MODULE_ID, 'advEnableCustomBorder') || false,
+        customBorderColor: game.settings.get(MODULE_ID, 'advCustomBorderColor') || '#f3c267'
+    };
+}
+
 /* -------------------------------------------- */
 /* Rule Evaluation & Active Effects             */
 /* -------------------------------------------- */
@@ -66,17 +84,35 @@ const RULE_TARGET_MAP = {
     stressMax: { key: 'system.resources.stress.max',     name: 'DHStatTracker: Stress' }
 };
 
+const ADV_RULE_TARGET_MAP = {
+    stressMax:   { key: 'system.resources.stress.max',         name: 'DHStatTracker: Stress' },
+    hpMax:       { key: 'system.resources.hitPoints.max',      name: 'DHStatTracker: HP' },
+    attackBonus: { key: 'system.bonuses.roll.attack.bonus',    name: 'DHStatTracker: Attack Bonus' },
+    critical:    { key: 'system.criticalThreshold',            name: 'DHStatTracker: Critical', invertAction: true }
+};
+
 function _getRules() {
     try {
         return JSON.parse(game.settings.get(MODULE_ID, 'trackerRules') || '[]');
     } catch { return []; }
 }
 
-function _buildEffectData(rule) {
-    const target = RULE_TARGET_MAP[rule.target];
+function _getAdvRules() {
+    try {
+        return JSON.parse(game.settings.get(MODULE_ID, 'advTrackerRules') || '[]');
+    } catch { return []; }
+}
+
+function _buildEffectData(rule, targetMap = RULE_TARGET_MAP) {
+    const target = targetMap[rule.target];
     if (!target) return null;
 
-    const value = rule.action === 'add' ? '1' : '-1';
+    let value;
+    if (target.invertAction) {
+        value = rule.action === 'add' ? '-1' : '1';
+    } else {
+        value = rule.action === 'add' ? '1' : '-1';
+    }
 
     return {
         name: target.name,
@@ -113,16 +149,19 @@ function _buildEffectData(rule) {
     };
 }
 
-async function _applyRuleEffect(actor, rule, times = 1) {
-    const target = RULE_TARGET_MAP[rule.target];
+async function _applyRuleEffect(actor, rule, times = 1, targetMap = RULE_TARGET_MAP) {
+    const target = targetMap[rule.target];
     if (!target) return;
 
     // Find existing AE for this rule
     const existing = actor.effects.find(e => e.getFlag(MODULE_ID, 'ruleId') === rule.id);
 
+    // For inverted targets (like Critical), flip the delta direction
+    const invertDelta = target.invertAction ? -1 : 1;
+
     if (existing) {
         const currentVal = parseInt(existing.changes[0]?.value) || 0;
-        const delta = rule.action === 'add' ? times : -times;
+        const delta = (rule.action === 'add' ? times : -times) * invertDelta;
         const newVal = currentVal + delta;
 
         if (newVal === 0) {
@@ -133,10 +172,10 @@ async function _applyRuleEffect(actor, rule, times = 1) {
             });
         }
     } else {
-        const effectData = _buildEffectData(rule);
+        const effectData = _buildEffectData(rule, targetMap);
         if (!effectData) return;
 
-        const delta = rule.action === 'add' ? times : -times;
+        const delta = (rule.action === 'add' ? times : -times) * invertDelta;
         effectData.changes[0].value = String(delta);
         await actor.createEmbeddedDocuments('ActiveEffect', [effectData]);
     }
@@ -146,8 +185,7 @@ function _reverseAction(action) {
     return action === 'add' ? 'remove' : 'add';
 }
 
-async function _evaluateRules(actor, oldValue, newValue, effectiveMax) {
-    const rules = _getRules();
+async function _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, rules, targetMap) {
     if (!rules.length) return;
 
     const delta = newValue - oldValue;
@@ -156,42 +194,46 @@ async function _evaluateRules(actor, oldValue, newValue, effectiveMax) {
         switch (rule.trigger) {
             case 'mark':
                 if (delta > 0) {
-                    await _applyRuleEffect(actor, rule, delta);
+                    await _applyRuleEffect(actor, rule, delta, targetMap);
                 } else if (delta < 0) {
-                    // Reverse: unmarking reverses a mark rule
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, Math.abs(delta));
+                    await _applyRuleEffect(actor, reversed, Math.abs(delta), targetMap);
                 }
                 break;
             case 'unmark':
                 if (delta < 0) {
-                    await _applyRuleEffect(actor, rule, Math.abs(delta));
+                    await _applyRuleEffect(actor, rule, Math.abs(delta), targetMap);
                 } else if (delta > 0) {
-                    // Reverse: marking reverses an unmark rule
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, delta);
+                    await _applyRuleEffect(actor, reversed, delta, targetMap);
                 }
                 break;
             case 'maximum':
                 if (newValue === effectiveMax && oldValue !== effectiveMax) {
-                    await _applyRuleEffect(actor, rule, 1);
+                    await _applyRuleEffect(actor, rule, 1, targetMap);
                 } else if (oldValue === effectiveMax && newValue !== effectiveMax) {
-                    // Reverse: leaving maximum
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, 1);
+                    await _applyRuleEffect(actor, reversed, 1, targetMap);
                 }
                 break;
             case 'minimum':
                 if (newValue === 0 && oldValue !== 0) {
-                    await _applyRuleEffect(actor, rule, 1);
+                    await _applyRuleEffect(actor, rule, 1, targetMap);
                 } else if (oldValue === 0 && newValue !== 0) {
-                    // Reverse: leaving minimum
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, 1);
+                    await _applyRuleEffect(actor, reversed, 1, targetMap);
                 }
                 break;
         }
     }
+}
+
+async function _evaluateRules(actor, oldValue, newValue, effectiveMax) {
+    return _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, _getRules(), RULE_TARGET_MAP);
+}
+
+async function _evaluateAdvRules(actor, oldValue, newValue, effectiveMax) {
+    return _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, _getAdvRules(), ADV_RULE_TARGET_MAP);
 }
 
 async function _refreshAllSheets() {
@@ -214,7 +256,8 @@ async function _refreshAllSheets() {
     }
 
     Object.values(ui.windows).forEach(app => {
-        if (app.document?.documentName === 'Actor' && app.document?.type === 'character') {
+        if (app.document?.documentName === 'Actor' &&
+            (app.document?.type === 'character' || app.document?.type === 'adversary')) {
             app.render(false);
         }
     });
@@ -230,14 +273,19 @@ function _getActorMax(actor, globalMax) {
 /* -------------------------------------------- */
 
 Hooks.on('preCreateActor', (actor, _data, _options, _userId) => {
-    if (actor.type !== 'character') return;
-
-    const settings = _getSettings();
-    const initialValue = settings.inverted ? settings.max : 0; 
-
-    actor.updateSource({
-        [`flags.${MODULE_ID}.${FLAG_KEY}`]: initialValue
-    });
+    if (actor.type === 'character') {
+        const settings = _getSettings();
+        const initialValue = settings.inverted ? settings.max : 0;
+        actor.updateSource({
+            [`flags.${MODULE_ID}.${FLAG_KEY}`]: initialValue
+        });
+    } else if (actor.type === 'adversary') {
+        const advSettings = _getAdvSettings();
+        const initialValue = advSettings.inverted ? advSettings.max : 0;
+        actor.updateSource({
+            [`flags.${MODULE_ID}.${ADV_FLAG_KEY}`]: initialValue
+        });
+    }
 });
 
 const renderHook = (app, _html) => {
@@ -254,6 +302,14 @@ Hooks.on('renderActorSheet', (app, html) => {
        (app.element.find('.character-row').length || app.element.find('.core-stats').length)) {
        renderHook(app, html);
     }
+});
+
+// Adversary Sheet Support (ApplicationV2 — fires renderAdversarySheet, not renderActorSheet)
+Hooks.on('renderAdversarySheet', (app, _html) => {
+    const actor = app.document;
+    if (!actor || actor.type !== 'adversary') return;
+    if (!game.user.isGM) return;
+    requestAnimationFrame(() => _injectAdversaryAttribute(app.element, actor));
 });
 
 // Sleek UI Module Support
@@ -403,6 +459,86 @@ function _injectAttributeSleekUI(form, actor) {
     favoritesEl.insertAdjacentElement('beforebegin', newSection);
 }
 
+
+function _injectAdversaryAttribute(form, actor) {
+    if (!form || !actor) return;
+
+    const settings = _getAdvSettings();
+    const current = actor.getFlag(MODULE_ID, ADV_FLAG_KEY) ?? 0;
+    const effectiveMax = settings.max;
+
+    const tagsEl = form.querySelector('.tags');
+    if (!tagsEl) return;
+
+    const existingSection = tagsEl.parentElement.querySelector('.dh-new-stat-tracker-section--adversary');
+
+    if (existingSection) {
+        const renderedMax = parseInt(existingSection.dataset.max || 0);
+        const renderedName = existingSection.dataset.name || '';
+        const renderedIcon = existingSection.dataset.icon || '';
+        const renderedColor = existingSection.style.getPropertyValue('--stat-color').trim();
+        const renderedIconColor = existingSection.style.getPropertyValue('--stat-icon-color').trim();
+        const renderedInverted = existingSection.dataset.inverted === 'true';
+        const renderedUseThemeBg = existingSection.dataset.enableCustomBackground === 'true';
+        const renderedBgColor = existingSection.dataset.customBgColor || '';
+        const renderedEnableCustomBorder = existingSection.dataset.enableCustomBorder === 'true';
+        const renderedBorderColor = existingSection.dataset.customBorderColor || '';
+
+        if (renderedMax === effectiveMax &&
+            renderedName === settings.name &&
+            renderedIcon === settings.icon &&
+            renderedColor === settings.color &&
+            renderedIconColor === settings.iconColor &&
+            renderedInverted === settings.inverted &&
+            renderedUseThemeBg === settings.enableCustomBackground &&
+            (!settings.enableCustomBackground || renderedBgColor === settings.customBackgroundColor) &&
+            renderedEnableCustomBorder === settings.enableCustomBorder &&
+            (!settings.enableCustomBorder || renderedBorderColor === settings.customBorderColor)) {
+            _updateVisuals(existingSection, current, effectiveMax, settings.icon, settings.inverted);
+            return;
+        }
+    }
+
+    const newSection = _buildAttributeSection(current, true, 'adversary', settings, effectiveMax);
+    _attachAdversaryListeners(newSection, actor, effectiveMax);
+
+    if (existingSection && existingSection.isConnected) {
+        existingSection.replaceWith(newSection);
+    } else {
+        tagsEl.insertAdjacentElement('afterend', newSection);
+    }
+}
+
+function _attachAdversaryListeners(section, actor, maxValue) {
+    if (!game.user.isGM) return;
+
+    section.addEventListener('click', async (event) => {
+        const pip = event.target.closest('.attribute-pip');
+        if (!pip) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const clicked = parseInt(pip.dataset.value);
+        const current = actor.getFlag(MODULE_ID, ADV_FLAG_KEY) ?? 0;
+        const newValue = Math.max(0, Math.min(maxValue, (current === clicked) ? clicked - 1 : clicked));
+
+        _previousValues.set(`adv_${actor.id}`, current);
+        await actor.setFlag(MODULE_ID, ADV_FLAG_KEY, newValue);
+    });
+
+    section.addEventListener('contextmenu', async (event) => {
+        const pip = event.target.closest('.attribute-pip');
+        if (!pip) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const current = actor.getFlag(MODULE_ID, ADV_FLAG_KEY) ?? 0;
+        const newValue = Math.max(0, current - 1);
+
+        _previousValues.set(`adv_${actor.id}`, current);
+        await actor.setFlag(MODULE_ID, ADV_FLAG_KEY, newValue);
+    });
+}
 
 function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax) {
     const section = document.createElement('div');
@@ -607,6 +743,18 @@ Hooks.on('updateActor', async (actor, changes, _options, userId) => {
     // Only process update on the client that made the change
     if (game.user.id !== userId) return;
 
+    // --- Adversary Tracker Rule Evaluation ---
+    const advNewValue = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${ADV_FLAG_KEY}`);
+    if (advNewValue !== undefined && actor.type === 'adversary') {
+        const advSettings = _getAdvSettings();
+        const advOldValue = _previousValues.get(`adv_${actor.id}`) ?? 0;
+        _previousValues.delete(`adv_${actor.id}`);
+        if (advOldValue !== advNewValue) {
+            await _evaluateAdvRules(actor, advOldValue, advNewValue, advSettings.max);
+        }
+    }
+
+    // --- Character Tracker ---
     const newValue = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_KEY}`);
     if (newValue === undefined) return;
 
