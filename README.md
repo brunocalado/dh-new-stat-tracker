@@ -1,6 +1,6 @@
 # Daggerheart: Custom Stat Tracker
 
-A configurable custom attribute tracker for character sheets.
+A configurable custom attribute tracker for character/adversary sheets.
 
 <p align="center">
   <img width="700" src="docs/preview.webp">
