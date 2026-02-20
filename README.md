@@ -27,10 +27,15 @@ You can use a macro.
 DHStatTracker.openManager();
 ```
 
+## Macro to Modify Actors
 
-DHStatTracker.updateActor({value: 1});   // adiciona 1
-DHStatTracker.updateActor({value: -1});  // remove 1
-DHStatTracker.updateActor({value: 3});   // adiciona 3
+```js
+DHStatTracker.updateActor({value: 1}); // This will add 1 to the tracker of the selected token.
+```
+
+```js
+DHStatTracker.updateActor({value: -1});  // This will remove 1 to the tracker of the selected token.
+```
 
 # Configuration
 

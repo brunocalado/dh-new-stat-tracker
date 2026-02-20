@@ -641,6 +641,80 @@ input:checked + .slider {
     }
 }
 
+/* ── RULES TAB ────────────────────────────────────────────── */
+.rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.rule-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+
+    & select {
+        flex: 1;
+        background: #1a1a1a;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f0f0e0;
+        border-radius: 4px;
+        height: 32px;
+        padding: 0 6px;
+        font-size: 13px;
+        cursor: pointer;
+
+        & option {
+            background: #1a1a1a;
+            color: #f0f0e0;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+        }
+    }
+
+    & .rule-delete {
+        flex: 0 0 32px;
+        height: 32px;
+        background: rgba(200, 50, 50, 0.2);
+        border: 1px solid rgba(200, 50, 50, 0.3);
+        color: #ff6b6b;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            background: rgba(200, 50, 50, 0.4);
+            border-color: #ff6b6b;
+        }
+    }
+}
+
+.rule-add-btn {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    color: var(--text-dim);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+
+    &:hover {
+        color: #fff;
+        border-color: var(--primary-accent);
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
 /* ── DAGGERHEART MENU BUTTON ─────────────────────────────── */
 .dh-new-stat-tracker-menu-btn {
     margin-top: 10px;

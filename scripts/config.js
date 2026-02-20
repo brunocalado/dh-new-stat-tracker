@@ -55,7 +55,7 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
         id: "tracker-settings-app",
         tag: "form",
         window: { title: "Tracker Configuration", resizable: true },
-        position: { width: 520, height: 600 }
+        position: { width: 570, height: 600 }
     };
 
     static PARTS = {
@@ -90,6 +90,9 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             textMax: game.settings.get(MODULE_ID, 'textMax'),
             textDepleted: game.settings.get(MODULE_ID, 'textDepleted'),
             
+            // Rules
+            trackerRules: JSON.parse(game.settings.get(MODULE_ID, 'trackerRules') || '[]'),
+
             // Helpers
             iconChoices: _getIconChoices(),
             maxPossible: MAX_POSSIBLE_VALUE
@@ -170,6 +173,43 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             });
         }
 
+        // --- RULES TAB LOGIC ---
+        const rulesList = this.element.querySelector('.rules-list');
+        const addRuleBtn = this.element.querySelector('.rule-add-btn');
+
+        if (addRuleBtn && rulesList) {
+            addRuleBtn.addEventListener('click', () => {
+                const ruleId = foundry.utils.randomID();
+                const row = document.createElement('div');
+                row.classList.add('rule-row');
+                row.dataset.ruleId = ruleId;
+                row.innerHTML = `
+                    <select class="rule-trigger" name="ruleTrigger">
+                        <option value="mark">On Mark</option>
+                        <option value="unmark">On Unmark</option>
+                        <option value="maximum">On Maximum</option>
+                        <option value="minimum">On Minimum</option>
+                    </select>
+                    <select class="rule-target" name="ruleTarget">
+                        <option value="hope">Hope Max</option>
+                        <option value="hpMax">HP Max</option>
+                        <option value="stressMax">Stress Max</option>
+                    </select>
+                    <select class="rule-action" name="ruleAction">
+                        <option value="add">Add</option>
+                        <option value="remove">Remove</option>
+                    </select>
+                    <button type="button" class="rule-delete" title="Delete Rule"><i class="fas fa-trash"></i></button>
+                `;
+                rulesList.appendChild(row);
+                row.querySelector('.rule-delete').addEventListener('click', () => row.remove());
+            });
+
+            rulesList.querySelectorAll('.rule-delete').forEach(btn => {
+                btn.addEventListener('click', () => btn.closest('.rule-row').remove());
+            });
+        }
+
         // Form Submission
         this.element.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -200,6 +240,16 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             await game.settings.set(MODULE_ID, 'chatImage', formData.get('chatImage'));
             await game.settings.set(MODULE_ID, 'textMax', formData.get('textMax'));
             await game.settings.set(MODULE_ID, 'textDepleted', formData.get('textDepleted'));
+
+            // Rules
+            const ruleRows = this.element.querySelectorAll('.rule-row');
+            const rules = Array.from(ruleRows).map(row => ({
+                id: row.dataset.ruleId,
+                trigger: row.querySelector('.rule-trigger').value,
+                target: row.querySelector('.rule-target').value,
+                action: row.querySelector('.rule-action').value
+            }));
+            await game.settings.set(MODULE_ID, 'trackerRules', JSON.stringify(rules));
 
             this.close();
             
@@ -273,7 +323,8 @@ export function registerModuleSettings(refreshCallback) {
         ['attributeVerbose', Boolean, false],
         ['chatImage', String, `modules/${MODULE_ID}/assets/chat-messages/skull.webp`],
         ['textMax', String, 'MAXIMUM REACHED'],
-        ['textDepleted', String, 'DEPLETED']
+        ['textDepleted', String, 'DEPLETED'],
+        ['trackerRules', String, '[]']
     ];
 
     hiddenSettings.forEach(([key, type, defaultValue]) => {

@@ -11,6 +11,9 @@ import { MODULE_ID, FLAG_KEY, MAX_POSSIBLE_VALUE, registerModuleSettings, regist
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
+// Tracks the previous pip value per actor for rule evaluation
+const _previousValues = new Map();
+
 /* -------------------------------------------- */
 /* Initialization                               */
 /* -------------------------------------------- */
@@ -51,6 +54,144 @@ function _getSettings() {
         textMax: game.settings.get(MODULE_ID, 'textMax') || 'MAXIMUM REACHED',
         textDepleted: game.settings.get(MODULE_ID, 'textDepleted') || 'DEPLETED'
     };
+}
+
+/* -------------------------------------------- */
+/* Rule Evaluation & Active Effects             */
+/* -------------------------------------------- */
+
+const RULE_TARGET_MAP = {
+    hope:      { key: 'system.resources.hope.max',      name: 'DHStatTracker: Hope' },
+    hpMax:     { key: 'system.resources.hitPoints.max',  name: 'DHStatTracker: HP' },
+    stressMax: { key: 'system.resources.stress.max',     name: 'DHStatTracker: Stress' }
+};
+
+function _getRules() {
+    try {
+        return JSON.parse(game.settings.get(MODULE_ID, 'trackerRules') || '[]');
+    } catch { return []; }
+}
+
+function _buildEffectData(rule) {
+    const target = RULE_TARGET_MAP[rule.target];
+    if (!target) return null;
+
+    const value = rule.action === 'add' ? '1' : '-1';
+
+    return {
+        name: target.name,
+        type: 'base',
+        system: {
+            rangeDependence: {
+                enabled: false,
+                type: 'withinRange',
+                target: 'hostile',
+                range: 'melee'
+            }
+        },
+        img: 'icons/magic/symbols/chevron-elipse-circle-blue.webp',
+        changes: [{
+            key: target.key,
+            mode: 2,
+            value: value,
+            priority: null
+        }],
+        disabled: false,
+        duration: {
+            startTime: 0, combat: null, seconds: null, rounds: null,
+            turns: null, startRound: null, startTurn: null
+        },
+        description: '<p>Daggerheart: Custom Stat Tracker</p>',
+        origin: null,
+        tint: '#ffffff',
+        transfer: false,
+        statuses: [],
+        sort: 0,
+        flags: {
+            [MODULE_ID]: { ruleId: rule.id }
+        }
+    };
+}
+
+async function _applyRuleEffect(actor, rule, times = 1) {
+    const target = RULE_TARGET_MAP[rule.target];
+    if (!target) return;
+
+    // Find existing AE for this rule
+    const existing = actor.effects.find(e => e.getFlag(MODULE_ID, 'ruleId') === rule.id);
+
+    if (existing) {
+        const currentVal = parseInt(existing.changes[0]?.value) || 0;
+        const delta = rule.action === 'add' ? times : -times;
+        const newVal = currentVal + delta;
+
+        if (newVal === 0) {
+            await existing.delete();
+        } else {
+            await existing.update({
+                changes: [{ ...existing.changes[0], value: String(newVal) }]
+            });
+        }
+    } else {
+        const effectData = _buildEffectData(rule);
+        if (!effectData) return;
+
+        const delta = rule.action === 'add' ? times : -times;
+        effectData.changes[0].value = String(delta);
+        await actor.createEmbeddedDocuments('ActiveEffect', [effectData]);
+    }
+}
+
+function _reverseAction(action) {
+    return action === 'add' ? 'remove' : 'add';
+}
+
+async function _evaluateRules(actor, oldValue, newValue, effectiveMax) {
+    const rules = _getRules();
+    if (!rules.length) return;
+
+    const delta = newValue - oldValue;
+
+    for (const rule of rules) {
+        switch (rule.trigger) {
+            case 'mark':
+                if (delta > 0) {
+                    await _applyRuleEffect(actor, rule, delta);
+                } else if (delta < 0) {
+                    // Reverse: unmarking reverses a mark rule
+                    const reversed = { ...rule, action: _reverseAction(rule.action) };
+                    await _applyRuleEffect(actor, reversed, Math.abs(delta));
+                }
+                break;
+            case 'unmark':
+                if (delta < 0) {
+                    await _applyRuleEffect(actor, rule, Math.abs(delta));
+                } else if (delta > 0) {
+                    // Reverse: marking reverses an unmark rule
+                    const reversed = { ...rule, action: _reverseAction(rule.action) };
+                    await _applyRuleEffect(actor, reversed, delta);
+                }
+                break;
+            case 'maximum':
+                if (newValue === effectiveMax && oldValue !== effectiveMax) {
+                    await _applyRuleEffect(actor, rule, 1);
+                } else if (oldValue === effectiveMax && newValue !== effectiveMax) {
+                    // Reverse: leaving maximum
+                    const reversed = { ...rule, action: _reverseAction(rule.action) };
+                    await _applyRuleEffect(actor, reversed, 1);
+                }
+                break;
+            case 'minimum':
+                if (newValue === 0 && oldValue !== 0) {
+                    await _applyRuleEffect(actor, rule, 1);
+                } else if (oldValue === 0 && newValue !== 0) {
+                    // Reverse: leaving minimum
+                    const reversed = { ...rule, action: _reverseAction(rule.action) };
+                    await _applyRuleEffect(actor, reversed, 1);
+                }
+                break;
+        }
+    }
 }
 
 async function _refreshAllSheets() {
@@ -416,6 +557,7 @@ function _attachListeners(section, actor, maxValue) {
             foundry.audio.AudioHelper.play({src: s.pipClickSound, volume: s.pipClickVolume, autoplay: true, loop: false}, false);
         }
 
+        _previousValues.set(actor.id, current);
         await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
     });
 
@@ -433,6 +575,7 @@ function _attachListeners(section, actor, maxValue) {
             foundry.audio.AudioHelper.play({src: s.pipClickSound, volume: s.pipClickVolume, autoplay: true, loop: false}, false);
         }
 
+        _previousValues.set(actor.id, current);
         await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
     });
 }
@@ -460,7 +603,7 @@ function _createCardContent(title, actorName, displayValue, statusText, colorSha
     </div>`;
 }
 
-Hooks.on('updateActor', (actor, changes, _options, userId) => {
+Hooks.on('updateActor', async (actor, changes, _options, userId) => {
     // Only process update on the client that made the change
     if (game.user.id !== userId) return;
 
@@ -469,6 +612,13 @@ Hooks.on('updateActor', (actor, changes, _options, userId) => {
 
     const settings = _getSettings();
     const effectiveMax = _getActorMax(actor, settings.max);
+
+    // Evaluate rules using the stored previous value
+    const oldValue = _previousValues.get(actor.id) ?? 0;
+    _previousValues.delete(actor.id);
+    if (oldValue !== newValue) {
+        await _evaluateRules(actor, oldValue, newValue, effectiveMax);
+    }
     let isAlertState = false;
     let statusText = "";
     let valueDisplay = String(newValue);
@@ -595,7 +745,8 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
         // Clamp value
         newValue = Math.max(0, Math.min(effectiveMax, newValue));
-        
+
+        _previousValues.set(actor.id, current);
         await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
         this.render();
     }
@@ -735,6 +886,8 @@ window.DHStatTracker = {
             return;
         }
 
+        _previousValues.set(actor.id, current);
         await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
     }
 };
+

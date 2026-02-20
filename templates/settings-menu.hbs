@@ -6,6 +6,7 @@
         <a class="item" data-tab="mechanics"><i class="fas fa-calculator"></i> Mechanics</a>
         <a class="item" data-tab="audio"><i class="fas fa-volume-up"></i> Audio</a>
         <a class="item" data-tab="chat"><i class="fas fa-comments"></i> Chat</a>
+        <a class="item" data-tab="rules"><i class="fas fa-cogs"></i> Rules</a>
     </nav>
 
     <!-- TAB CONTENT CONTAINER -->
@@ -210,6 +211,45 @@
                     <input type="text" name="textDepleted" value="{{textDepleted}}">
                     <span class="hint">Displayed when draining.</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- =======================
+             TAB: RULES
+             ======================= -->
+        <div class="tab" data-tab="rules">
+            <div class="config-card">
+                <h3><i class="fas fa-scroll"></i> Pip Event Rules</h3>
+                <span class="hint" style="margin-bottom: 10px; display: block;">
+                    Define rules that apply Active Effects to the actor when pip events occur.
+                </span>
+
+                <div class="rules-list">
+                    {{#each trackerRules}}
+                    <div class="rule-row" data-rule-id="{{this.id}}">
+                        <select class="rule-trigger" name="ruleTrigger">
+                            <option value="mark" {{#if (eq this.trigger "mark")}}selected{{/if}}>On Mark</option>
+                            <option value="unmark" {{#if (eq this.trigger "unmark")}}selected{{/if}}>On Unmark</option>
+                            <option value="maximum" {{#if (eq this.trigger "maximum")}}selected{{/if}}>On Maximum</option>
+                            <option value="minimum" {{#if (eq this.trigger "minimum")}}selected{{/if}}>On Minimum</option>
+                        </select>
+                        <select class="rule-target" name="ruleTarget">
+                            <option value="hope" {{#if (eq this.target "hope")}}selected{{/if}}>Hope Max</option>
+                            <option value="hpMax" {{#if (eq this.target "hpMax")}}selected{{/if}}>HP Max</option>
+                            <option value="stressMax" {{#if (eq this.target "stressMax")}}selected{{/if}}>Stress Max</option>
+                        </select>
+                        <select class="rule-action" name="ruleAction">
+                            <option value="add" {{#if (eq this.action "add")}}selected{{/if}}>Add</option>
+                            <option value="remove" {{#if (eq this.action "remove")}}selected{{/if}}>Remove</option>
+                        </select>
+                        <button type="button" class="rule-delete" title="Delete Rule"><i class="fas fa-trash"></i></button>
+                    </div>
+                    {{/each}}
+                </div>
+
+                <button type="button" class="rule-add-btn">
+                    <i class="fas fa-plus"></i> Add Rule
+                </button>
             </div>
         </div>
 
