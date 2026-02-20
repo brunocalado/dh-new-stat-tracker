@@ -677,5 +677,58 @@ window.DHStatTracker = {
     openManager: () => {
         if (!trackerStatusApp) trackerStatusApp = new TrackerStatusApp();
         trackerStatusApp.render({ force: true });
+    },
+
+    /**
+     * Updates the tracker value of the currently selected actor.
+     * @param {object} param - Object with a `value` property (number to add/subtract).
+     * @example DHStatTracker.updateActor({value: 1});   // adds 1
+     * @example DHStatTracker.updateActor({value: -1});  // removes 1
+     */
+    updateActor: async ({ value } = {}) => {
+        // Validate argument
+        if (value === undefined || value === null || typeof value !== 'number' || !Number.isInteger(value)) {
+            ui.notifications.error("DHStatTracker.updateActor() requires an object with an integer 'value' property. Example: {value: 1}");
+            return;
+        }
+
+        // Get selected token's actor
+        const token = canvas.tokens.controlled[0];
+        if (!token) {
+            ui.notifications.warn("No token selected. Please select a token first.");
+            return;
+        }
+
+        const actor = token.actor;
+        if (!actor) {
+            ui.notifications.error("Selected token has no linked actor.");
+            return;
+        }
+
+        // Check that the actor has the tracker flag
+        const current = actor.getFlag(MODULE_ID, FLAG_KEY);
+        if (current === undefined || current === null) {
+            ui.notifications.warn(`Actor "${actor.name}" does not have a tracker flag set.`);
+            return;
+        }
+
+        // Permission check
+        const settings = _getSettings();
+        const canInteract = settings.gmOnly ? game.user.isGM : actor.isOwner;
+        if (!canInteract) {
+            ui.notifications.warn("You do not have permission to modify this tracker.");
+            return;
+        }
+
+        const effectiveMax = _getActorMax(actor, settings.max);
+        const newValue = Math.max(0, Math.min(effectiveMax, current + value));
+
+        if (newValue === current) {
+            const reason = value > 0 ? "already at maximum" : "already at minimum";
+            ui.notifications.info(`Tracker for "${actor.name}" is ${reason} (${current}).`);
+            return;
+        }
+
+        await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
     }
 };

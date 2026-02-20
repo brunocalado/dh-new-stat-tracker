@@ -27,6 +27,11 @@ You can use a macro.
 DHStatTracker.openManager();
 ```
 
+
+DHStatTracker.updateActor({value: 1});   // adiciona 1
+DHStatTracker.updateActor({value: -1});  // remove 1
+DHStatTracker.updateActor({value: 3});   // adiciona 3
+
 # Configuration
 
 Navigate to **Settings** → **Configure Settings** → **Module Settings** → **Daggerheart: Custom Stat Tracker**
