@@ -11,12 +11,37 @@
     --text-main: #f0f0e0;
     --text-dim: #aaa;
     --input-bg: rgba(0, 0, 0, 0.3);
-    
+
     font-family: "Signika", sans-serif;
     color: var(--text-main);
     display: flex;
     flex-direction: column;
     height: 100%;
+
+    /* ── INPUT STYLING ─────────────────────────────────────── */
+    & input[type="text"],
+    & input[type="number"] {
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        border-radius: 4px;
+        height: 32px;
+        padding: 0 10px;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+    & input:focus {
+        outline: none;
+        border-color: var(--primary-accent);
+        box-shadow: 0 0 5px rgba(201, 160, 96, 0.2);
+    }
+
+    /* ── RANGE INPUT ───────────────────────────────────────── */
+    & input[type=range] {
+        width: 100%;
+        accent-color: var(--primary-accent);
+    }
 }
 
 /* ── TABS NAVIGATION ───────────────────────────────────────── */
@@ -25,34 +50,34 @@
     gap: 10px;
     padding: 0 10px;
     margin-bottom: 15px;
-}
 
-.tracker-nav a.item {
-    padding: 10px 20px;
-    border-radius: 6px 6px 0 0;
-    background: transparent;
-    color: var(--text-dim);
-    font-weight: bold;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: 1px solid transparent;
-    border-bottom: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
+    & a.item {
+        padding: 10px 20px;
+        border-radius: 6px 6px 0 0;
+        background: transparent;
+        color: var(--text-dim);
+        font-weight: bold;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: 1px solid transparent;
+        border-bottom: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
 
-.tracker-nav a.item:hover {
-    color: #fff;
-    background: rgba(255,255,255,0.05);
-}
+        &:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
 
-.tracker-nav a.item.active {
-    background: var(--input-bg);
-    color: var(--primary-accent);
-    border-color: var(--border-color);
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-    background: rgba(255, 255, 255, 0.05);
+        &.active {
+            background: var(--input-bg);
+            color: var(--primary-accent);
+            border-color: var(--border-color);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+    }
 }
 
 /* ── TAB CONTENT & ANIMATION ───────────────────────────────── */
@@ -60,15 +85,15 @@
     flex: 1;
     overflow-y: auto;
     padding: 0 5px;
-}
 
-.tab-content .tab {
-    display: none;
-    animation: slideIn 0.3s ease-out;
-}
+    & .tab {
+        display: none;
+        animation: slideIn 0.3s ease-out;
 
-.tab-content .tab.active {
-    display: block;
+        &.active {
+            display: block;
+        }
+    }
 }
 
 @keyframes slideIn {
@@ -83,56 +108,41 @@
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
-}
 
-.config-card h3 {
-    padding-bottom: 5px;
-    margin: 0 0 15px 0;
-    color: var(--primary-accent);
-    font-family: "Aleo", serif;
-    font-size: 1.1em;
-    text-transform: uppercase;
-    opacity: 0.9;
+    & h3 {
+        padding-bottom: 5px;
+        margin: 0 0 15px 0;
+        color: var(--primary-accent);
+        font-family: "Aleo", serif;
+        font-size: 1.1em;
+        text-transform: uppercase;
+        opacity: 0.9;
+    }
 }
 
 /* ── FORM GROUPS ───────────────────────────────────────────── */
 .form-group {
     margin-bottom: 15px;
-}
 
-.form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 4px;
-    color: #e0e0e0;
-}
+    & label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+        color: #e0e0e0;
+    }
 
-.form-group .hint {
-    display: block;
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 4px;
-    line-height: 1.4;
-    font-style: italic;
-}
+    & .hint {
+        display: block;
+        font-size: 12px;
+        color: var(--text-dim);
+        margin-top: 4px;
+        line-height: 1.4;
+        font-style: italic;
+    }
 
-/* ── INPUT STYLING ─────────────────────────────────────────── */
-.tracker-settings-wrapper input[type="text"],
-.tracker-settings-wrapper input[type="number"] {
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
-    color: #fff;
-    border-radius: 4px;
-    height: 32px;
-    padding: 0 10px;
-    width: 100%;
-    transition: border-color 0.2s;
-}
-
-.tracker-settings-wrapper input:focus {
-    outline: none;
-    border-color: var(--primary-accent);
-    box-shadow: 0 0 5px rgba(201, 160, 96, 0.2);
+    &.custom-toggle-group {
+        display: block !important;
+    }
 }
 
 /* ── COLOR PICKER CUSTOMIZATION ────────────────────────────── */
@@ -160,25 +170,23 @@ input[type="color"].color-input {
 .file-input-group {
     display: flex;
     gap: 5px;
-}
-.file-input-group button {
-    flex: 0 0 40px;
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.file-input-group button:hover {
-    color: #fff;
-    border-color: var(--primary-accent);
+
+    & button {
+        flex: 0 0 40px;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            color: #fff;
+            border-color: var(--primary-accent);
+        }
+    }
 }
 
 /* ── MODERN TOGGLE SWITCH (FIXED LAYOUT) ───────────────────── */
-.form-group.custom-toggle-group {
-    display: block !important;
-}
-
 .toggle-switch {
     display: flex !important;
     flex-direction: row !important;
@@ -189,10 +197,10 @@ input[type="color"].color-input {
     margin: 0;
     padding: 5px 0;
     width: 100%;
-}
 
-.toggle-switch input {
-    display: none;
+    & input {
+        display: none;
+    }
 }
 
 .slider {
@@ -204,29 +212,29 @@ input[type="color"].color-input {
     transition: .4s;
     border: 1px solid #555;
     flex-shrink: 0;
-}
 
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: .4s;
+    &:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 3px;
+        background-color: white;
+        border-radius: 50%;
+        transition: .4s;
+    }
 }
 
 input:checked + .slider {
     background-color: var(--primary-accent);
     border-color: var(--primary-accent);
-}
 
-input:checked + .slider:before {
-    transform: translateX(20px);
-    background-color: #fff;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    &:before {
+        transform: translateX(20px);
+        background-color: #fff;
+        box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    }
 }
 
 .toggle-label {
@@ -236,12 +244,6 @@ input:checked + .slider:before {
     margin-top: 1px;
 }
 
-/* ── RANGE INPUT ───────────────────────────────────────────── */
-.tracker-settings-wrapper input[type=range] {
-    width: 100%;
-    accent-color: var(--primary-accent);
-}
-
 /* ── HIDDEN PICKER CONTAINERS ─────────────────────────────── */
 .custom-bg-picker-container,
 .custom-border-picker-container {
@@ -249,10 +251,10 @@ input:checked + .slider:before {
     padding-left: 20px;
     border-left: 2px solid #444;
     margin-top: 10px;
-}
-.custom-bg-picker-container.visible,
-.custom-border-picker-container.visible {
-    display: block;
+
+    &.visible {
+        display: block;
+    }
 }
 
 /* ── FOOTER ────────────────────────────────────────────────── */
@@ -261,47 +263,95 @@ input:checked + .slider:before {
     padding-top: 15px;
     margin-top: auto;
     justify-content: flex-end;
-}
 
-.sheet-footer button {
-    background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
-    border: 1px solid #000;
-    color: #e0e0e0;
-    padding: 8px 24px;
-    font-family: "Aleo";
-    font-weight: bold;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
-}
+    & button {
+        background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
+        border: 1px solid #000;
+        color: #e0e0e0;
+        padding: 8px 24px;
+        font-family: "Aleo";
+        font-weight: bold;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
 
-.sheet-footer button:hover {
-    color: #fff;
-    box-shadow: 0 0 10px var(--primary-accent);
-    border-color: var(--primary-accent);
+        &:hover {
+            color: #fff;
+            box-shadow: 0 0 10px var(--primary-accent);
+            border-color: var(--primary-accent);
+        }
+    }
 }
 
 /* ── SHEET INJECTION & DYNAMIC LINES ───────────────────────── */
-.daggerheart.sheet.actor .dh-new-stat-tracker-section {
-    --stat-color: #e54e4e; 
-    --stat-bg: #18162e;
-    --stat-border: #f3c267;
+.daggerheart.sheet.actor {
+    & .dh-new-stat-tracker-section {
+        --stat-color: #e54e4e;
+        --stat-bg: #18162e;
+        --stat-border: #f3c267;
 
-    position: relative;
-    z-index: 10;
-    
-    background-color: var(--stat-bg);
-    border: 1px solid var(--stat-border);
-    border-radius: 6px;
-    color: var(--stat-color);
+        position: relative;
+        z-index: 10;
 
-    /* Flexbox Layout for Filler Lines */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px; /* Space between lines and content */
-    overflow: hidden;
+        background-color: var(--stat-bg);
+        border: 1px solid var(--stat-border);
+        border-radius: 6px;
+        color: var(--stat-color);
+
+        /* Flexbox Layout for Filler Lines */
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px; /* Space between lines and content */
+        overflow: hidden;
+
+        & .attribute-pip {
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            color: var(--stat-color); font-size: var(--font-size-14, 14px);
+            transition: transform 0.1s ease, color 0.1s ease;
+            user-select: none; width: 16px; height: 16px;
+
+            &:hover {
+                transform: scale(1.25); color: color-mix(in srgb, var(--stat-color), white 40%);
+            }
+
+            &.no-interact {
+                cursor: default; pointer-events: none; opacity: 0.8;
+            }
+        }
+
+        &.attribute-max {
+            animation: dh-new-stat-tracker-pulse 1.4s ease-in-out infinite;
+            border-color: var(--stat-color);
+        }
+    }
+
+    & .character-header-sheet .character-row { margin-bottom: 8px; }
+
+    & .dh-new-stat-tracker-section--standard {
+        width: 100%;
+        height: 30px;
+        margin-top: 4px; margin-bottom: 8px; margin-left: 0px;
+        padding: 0 10px; /* Internal padding */
+
+        & h4 {
+            font-size: var(--font-size-14, 14px); font-weight: bold; text-transform: uppercase;
+            color: var(--stat-color); margin: 0; line-height: 1;
+        }
+    }
+
+    /* DaggerheartPlus Module Support: Specific styles for the DH+ sheet layout */
+    & .dh-new-stat-tracker-section--dhplus {
+        padding: 4px 8px;
+
+        & .attribute-pips {
+            display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; justify-content: center;
+        }
+
+        & .stat-label {
+            font-size: var(--font-size-12, 12px); font-weight: bold; text-transform: uppercase;
+            color: var(--stat-color); text-align: center;
+        }
+    }
 }
-
-.daggerheart.sheet.actor .character-header-sheet .character-row { margin-bottom: 8px; }
 
 /* Central Wrapper holding Text and Pips */
 .dh-tracker-content-wrapper {
@@ -323,45 +373,6 @@ input:checked + .slider:before {
     border-radius: 2px;
 }
 
-.daggerheart.sheet.actor .dh-new-stat-tracker-section--standard {
-    width: 100%; 
-    height: 30px;
-    margin-top: 4px; margin-bottom: 8px; margin-left: 0px;
-    padding: 0 10px; /* Internal padding */
-}
-.daggerheart.sheet.actor .dh-new-stat-tracker-section--standard h4 {
-    font-size: var(--font-size-14, 14px); font-weight: bold; text-transform: uppercase;
-    color: var(--stat-color); margin: 0; line-height: 1;
-}
-
-/* DaggerheartPlus Module Support: Specific styles for the DH+ sheet layout */
-.daggerheart.sheet.actor .dh-new-stat-tracker-section--dhplus {
-    padding: 4px 8px; 
-}
-.daggerheart.sheet.actor .dh-new-stat-tracker-section--dhplus .attribute-pips {
-    display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; justify-content: center;
-}
-.daggerheart.sheet.actor .dh-new-stat-tracker-section--dhplus .stat-label {
-    font-size: var(--font-size-12, 12px); font-weight: bold; text-transform: uppercase;
-    color: var(--stat-color); text-align: center;
-}
-
-.daggerheart.sheet.actor .dh-new-stat-tracker-section .attribute-pip {
-    display: flex; align-items: center; justify-content: center; cursor: pointer;
-    color: var(--stat-color); font-size: var(--font-size-14, 14px);
-    transition: transform 0.1s ease, color 0.1s ease;
-    user-select: none; width: 16px; height: 16px;
-}
-.daggerheart.sheet.actor .dh-new-stat-tracker-section .attribute-pip:hover {
-    transform: scale(1.25); color: color-mix(in srgb, var(--stat-color), white 40%);
-}
-.daggerheart.sheet.actor .dh-new-stat-tracker-section .attribute-pip.no-interact {
-    cursor: default; pointer-events: none; opacity: 0.8;
-}
-.daggerheart.sheet.actor .dh-new-stat-tracker-section.attribute-max {
-    animation: dh-new-stat-tracker-pulse 1.4s ease-in-out infinite;
-    border-color: var(--stat-color);
-}
 @keyframes dh-new-stat-tracker-pulse {
     0%   { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--stat-color), transparent 50%); }
     50%  { box-shadow: 0 0 8px 4px color-mix(in srgb, var(--stat-color), transparent 30%); }
@@ -369,80 +380,82 @@ input:checked + .slider:before {
 }
 
 /* Sleek UI layout */
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek {
-    margin: 4px 12px 0 12px;
-    width: calc(100% - 24px);
-    box-sizing: border-box;
-    padding: 8px 8px;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--color-border);
-    background: var(--gradient-card);
-    position: relative;
-    z-index: 2;
-    font-family: var(--font-primary);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+.daggerheart.sheet.actor.sleek-ui {
+    & .dh-new-stat-tracker-section--sleek {
+        margin: 4px 12px 0 12px;
+        width: calc(100% - 24px);
+        box-sizing: border-box;
+        padding: 8px 8px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-border);
+        background: var(--gradient-card);
+        position: relative;
+        z-index: 2;
+        font-family: var(--font-primary);
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
-/* Push .favorites back down so it doesn't overlap our tracker */
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek + .favorites {
-    margin-top: 0;
-    padding-top: 8px;
-}
+        /* Push .favorites back down so it doesn't overlap our tracker */
+        & + .favorites {
+            margin-top: 0;
+            padding-top: 8px;
+        }
 
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .dh-filler-line {
-    display: none;
-}
+        & .dh-filler-line {
+            display: none;
+        }
 
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .dh-tracker-content-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-}
+        & .dh-tracker-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
 
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .stat-label,
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek h4 {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--stat-color);
-    margin: 0;
-    border: none;
-}
+        & .stat-label,
+        & h4 {
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-semibold);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--stat-color);
+            margin: 0;
+            border: none;
+        }
 
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pips {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
+        & .attribute-pips {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
 
-/* Pip icons inherit custom color, empty pips use Sleek UI's border color */
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pip .fa-regular {
-    color: var(--color-border);
-}
+        /* Pip icons inherit custom color, empty pips use Sleek UI's border color */
+        & .attribute-pip .fa-regular {
+            color: var(--color-border);
+        }
 
-/* Alert state glow uses the stat color */
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek.attribute-max {
-    box-shadow: 0px 0px 9px -1px var(--stat-color);
-    border-color: var(--stat-color);
-}
+        /* Alert state glow uses the stat color */
+        &.attribute-max {
+            box-shadow: 0px 0px 9px -1px var(--stat-color);
+            border-color: var(--stat-color);
+        }
 
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pips-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
+        & .attribute-pips-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
 
-.daggerheart.sheet.actor.sleek-ui .dh-new-stat-tracker-section--sleek .attribute-pips-wrapper .attribute-pips {
-    display: flex;
-    gap: 4px;
-    flex-wrap: nowrap;
-    justify-content: center;
+            & .attribute-pips {
+                display: flex;
+                gap: 4px;
+                flex-wrap: nowrap;
+                justify-content: center;
+            }
+        }
+    }
 }
 
 /* ── CHAT CARD ────────────────────────────────────────────── */
@@ -450,75 +463,83 @@ input:checked + .slider:before {
     border: 2px solid #C9A060;
     border-radius: 8px;
     overflow: hidden;
-}
-.dh-new-stat-tracker-chat-card .card-header {
-    background: #191919 !important;
-    padding: 8px;
-    border-bottom: 2px solid #C9A060;
-}
-.dh-new-stat-tracker-chat-card .card-header h3 {
-    margin: 0;
-    font-weight: bold;
-    color: #C9A060 !important;
-    font-family: 'Aleo', serif;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    width: 100%;
-}
-.dh-new-stat-tracker-chat-card .card-content {
-    background-color: #333;
-    background-image: var(--chat-bg-image, none);
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
-    padding: 20px;
-    min-height: 150px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    position: relative;
-}
-.dh-new-stat-tracker-chat-card .card-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    z-index: 0;
-}
-.dh-new-stat-tracker-chat-card .card-body {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-}
-.dh-new-stat-tracker-chat-card .actor-name {
-    color: #ffffff;
-    font-size: 1.5em;
-    font-weight: 800;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    font-family: 'Aleo', serif;
-    text-shadow: 2px 2px 0 #000;
-}
-.dh-new-stat-tracker-chat-card .display-value {
-    color: #ffffff !important;
-    font-size: 3.5em;
-    font-weight: bold;
-    text-shadow: 0px 0px 15px var(--chat-shadow-color, #00b0ff), 2px 2px 0px #000;
-    font-family: 'Lato', sans-serif;
-    line-height: 1;
-}
-.dh-new-stat-tracker-chat-card .status-text {
-    color: #ff6b6b;
-    font-size: 1.0em;
-    font-weight: bold;
-    margin-top: 5px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+
+    & .card-header {
+        background: #191919 !important;
+        padding: 8px;
+        border-bottom: 2px solid #C9A060;
+
+        & h3 {
+            margin: 0;
+            font-weight: bold;
+            color: #C9A060 !important;
+            font-family: 'Aleo', serif;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+    }
+
+    & .card-content {
+        background-color: #333;
+        background-image: var(--chat-bg-image, none);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        padding: 20px;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+    }
+
+    & .card-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 0;
+    }
+
+    & .card-body {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+    }
+
+    & .actor-name {
+        color: #ffffff;
+        font-size: 1.5em;
+        font-weight: 800;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        font-family: 'Aleo', serif;
+        text-shadow: 2px 2px 0 #000;
+    }
+
+    & .display-value {
+        color: #ffffff !important;
+        font-size: 3.5em;
+        font-weight: bold;
+        text-shadow: 0px 0px 15px var(--chat-shadow-color, #00b0ff), 2px 2px 0px #000;
+        font-family: 'Lato', sans-serif;
+        line-height: 1;
+    }
+
+    & .status-text {
+        color: #ff6b6b;
+        font-size: 1.0em;
+        font-weight: bold;
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
 }
 
 /* ── TRACKER MANAGER & CONFIG APPS ────────────────────────── */
@@ -526,81 +547,97 @@ input:checked + .slider:before {
 #tracker-config-app .window-content {
     padding: 0 !important;
 }
+
 .tracker-status-wrapper {
     background: #222;
     padding: 10px;
     height: 100%;
-}
-.tracker-status-wrapper .tracker-item {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    margin-bottom: 5px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 5px;
-}
-.tracker-status-wrapper .tracker-actor-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-.tracker-status-wrapper .tracker-actor-name {
-    font-weight: bold;
-    font-size: 1.1em;
-}
-.tracker-status-wrapper .tracker-user-name {
-    font-size: 0.8em;
-    color: #777;
-}
-.tracker-status-wrapper .tracker-controls {
-    flex: 0 0 auto;
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 5px;
-}
-.tracker-status-wrapper .tracker-btn {
-    width: 30px;
-    line-height: 24px;
-}
-.tracker-status-wrapper .tracker-value {
-    font-weight: bold;
-    min-width: 60px;
-    text-align: center;
-    font-size: 1.2em;
-    white-space: nowrap;
-}
-.tracker-status-wrapper .tracker-config-row {
-    width: 100%;
-    justify-content: space-between;
-}
-.tracker-status-wrapper .tracker-config-row--center {
-    align-items: center;
-}
-.tracker-status-wrapper .tracker-config-controls {
-    flex: 0 0 auto;
-    gap: 5px;
-    align-items: center;
-}
-.tracker-status-wrapper .tracker-config-gap {
-    align-items: center;
-    gap: 10px;
-}
-.tracker-status-wrapper .tracker-modifier-value {
-    font-weight: bold;
-    min-width: 30px;
-    text-align: center;
-}
-.tracker-status-wrapper .tracker-effective-label {
-    font-weight: bold;
-}
-.tracker-status-wrapper .tracker-effective-value {
-    font-weight: bold;
-    color: #e54e4e;
-}
-.tracker-status-wrapper hr.tracker-hr {
-    width: 100%;
+
+    & .tracker-item {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 5px;
+    }
+
+    & .tracker-actor-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    & .tracker-actor-name {
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+
+    & .tracker-user-name {
+        font-size: 0.8em;
+        color: #777;
+    }
+
+    & .tracker-controls {
+        flex: 0 0 auto;
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 5px;
+    }
+
+    & .tracker-btn {
+        width: 30px;
+        line-height: 24px;
+    }
+
+    & .tracker-value {
+        font-weight: bold;
+        min-width: 60px;
+        text-align: center;
+        font-size: 1.2em;
+        white-space: nowrap;
+    }
+
+    & .tracker-config-row {
+        width: 100%;
+        justify-content: space-between;
+
+        &--center {
+            align-items: center;
+        }
+    }
+
+    & .tracker-config-controls {
+        flex: 0 0 auto;
+        gap: 5px;
+        align-items: center;
+    }
+
+    & .tracker-config-gap {
+        align-items: center;
+        gap: 10px;
+    }
+
+    & .tracker-modifier-value {
+        font-weight: bold;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    & .tracker-effective-label {
+        font-weight: bold;
+    }
+
+    & .tracker-effective-value {
+        font-weight: bold;
+        color: #e54e4e;
+    }
+
+    & hr.tracker-hr {
+        width: 100%;
+    }
 }
 
 /* ── DAGGERHEART MENU BUTTON ─────────────────────────────── */
