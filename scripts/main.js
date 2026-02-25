@@ -325,6 +325,7 @@ Hooks.on('renderAdversarySheet', (app, _html) => {
     const actor = app.document;
     if (!actor || actor.type !== 'adversary') return;
     if (!game.user.isGM) return;
+    if (game.settings.get(MODULE_ID, 'hideAdversaryTracker')) return;
     requestAnimationFrame(() => _injectAdversaryAttribute(app.element, actor));
 });
 

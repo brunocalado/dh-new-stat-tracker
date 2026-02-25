@@ -299,6 +299,7 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             enableCustomBorder: game.settings.get(MODULE_ID, 'advEnableCustomBorder'),
             customBorderColor: game.settings.get(MODULE_ID, 'advCustomBorderColor'),
             advTrackerRules: JSON.parse(game.settings.get(MODULE_ID, 'advTrackerRules') || '[]'),
+            hideAdversaryTracker: game.settings.get(MODULE_ID, 'hideAdversaryTracker'),
             iconChoices: _getIconChoices(),
             maxPossible: ADV_MAX_POSSIBLE_VALUE
         };
@@ -399,6 +400,7 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             await game.settings.set(MODULE_ID, 'advCustomBackgroundColor', formData.get('customBackgroundColor'));
             await game.settings.set(MODULE_ID, 'advEnableCustomBorder', formData.get('enableCustomBorder') === 'on');
             await game.settings.set(MODULE_ID, 'advCustomBorderColor', formData.get('customBorderColor'));
+            await game.settings.set(MODULE_ID, 'hideAdversaryTracker', formData.get('hideAdversaryTracker') === 'on');
 
             // Rules
             const ruleRows = this.element.querySelectorAll('.rule-row');
@@ -529,7 +531,17 @@ export function registerModuleSettings(refreshCallback) {
         name: 'GM Only Mode',
         hint: 'If checked, only the GM can modify tracker values directly on the sheet.',
         scope: 'world',
-        config: true, 
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: refreshCallback
+    });
+
+    game.settings.register(MODULE_ID, 'hideAdversaryTracker', {
+        name: 'Hide Adversary Tracker',
+        hint: 'If checked, the tracker will not be displayed on adversary sheets for anyone, including the GM.',
+        scope: 'world',
+        config: false,
         type: Boolean,
         default: false,
         onChange: refreshCallback
