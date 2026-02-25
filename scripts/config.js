@@ -95,6 +95,9 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             // Rules
             trackerRules: JSON.parse(game.settings.get(MODULE_ID, 'trackerRules') || '[]'),
 
+            // Visibility
+            hideFromPlayers: game.settings.get(MODULE_ID, 'hideFromPlayers'),
+
             // Helpers
             iconChoices: _getIconChoices(),
             maxPossible: MAX_POSSIBLE_VALUE
@@ -253,6 +256,9 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
                 action: row.querySelector('.rule-action').value
             }));
             await game.settings.set(MODULE_ID, 'trackerRules', JSON.stringify(rules));
+
+            // Visibility
+            await game.settings.set(MODULE_ID, 'hideFromPlayers', formData.get('hideFromPlayers') === 'on');
 
             this.close();
             
@@ -477,7 +483,8 @@ export function registerModuleSettings(refreshCallback) {
         ['chatImage', String, `modules/${MODULE_ID}/assets/chat-messages/skull.webp`],
         ['textMax', String, 'MAXIMUM REACHED'],
         ['textDepleted', String, 'DEPLETED'],
-        ['trackerRules', String, '[]']
+        ['trackerRules', String, '[]'],
+        ['hideFromPlayers', Boolean, false]
     ];
 
     hiddenSettings.forEach(([key, type, defaultValue]) => {

@@ -52,7 +52,8 @@ function _getSettings() {
         pipClickVolume: game.settings.get(MODULE_ID, 'pipClickVolume') ?? 0.8,
         chatImage: game.settings.get(MODULE_ID, 'chatImage'),
         textMax: game.settings.get(MODULE_ID, 'textMax') || 'MAXIMUM REACHED',
-        textDepleted: game.settings.get(MODULE_ID, 'textDepleted') || 'DEPLETED'
+        textDepleted: game.settings.get(MODULE_ID, 'textDepleted') || 'DEPLETED',
+        hideFromPlayers: game.settings.get(MODULE_ID, 'hideFromPlayers') || false
     };
 }
 
@@ -273,6 +274,14 @@ function _getActorMax(actor, globalMax) {
     return Math.max(1, globalMax + modifier);
 }
 
+function _isTrackerVisibleForUser(actor) {
+    if (game.user.isGM) return true;
+    const mode = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
+    if (mode === 'visible') return true;
+    if (mode === 'hidden') return false;
+    return !game.settings.get(MODULE_ID, 'hideFromPlayers');
+}
+
 /* -------------------------------------------- */
 /* Hooks: Creation and Rendering                */
 /* -------------------------------------------- */
@@ -296,6 +305,7 @@ Hooks.on('preCreateActor', (actor, _data, _options, _userId) => {
 const renderHook = (app, _html) => {
     const actor = app.document;
     if (!actor || actor.type !== 'character') return;
+    if (!_isTrackerVisibleForUser(actor)) return;
     requestAnimationFrame(() => _injectAttribute(app.element, actor));
 };
 
@@ -303,7 +313,8 @@ Hooks.on('renderCharacterSheet', renderHook);
 // DaggerheartPlus Module Support: Hook to render the tracker on the DH+ character sheet
 Hooks.on('renderDaggerheartPlusCharacterSheet', renderHook);
 Hooks.on('renderActorSheet', (app, html) => {
-    if (app.document?.type === 'character' && 
+    const actor = app.document;
+    if (actor?.type === 'character' &&
        (app.element.find('.character-row').length || app.element.find('.core-stats').length)) {
        renderHook(app, html);
     }
@@ -321,6 +332,7 @@ Hooks.on('renderAdversarySheet', (app, _html) => {
 Hooks.on('renderSleekCharacterSheet', (app, _html) => {
     const actor = app.document;
     if (!actor || actor.type !== 'character') return;
+    if (!_isTrackerVisibleForUser(actor)) return;
     requestAnimationFrame(() => _injectAttributeSleekUI(app.element, actor));
 });
 
@@ -855,12 +867,14 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
             const actor = u.character;
             const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
             const effectiveMax = _getActorMax(actor, settings.max);
+            const visibilityMode = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
             return {
                 actorId: actor.id,
                 actorName: actor.name,
                 userName: u.name,
                 value: current,
-                max: effectiveMax
+                max: effectiveMax,
+                visibilityMode
             };
         });
 
@@ -876,6 +890,9 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
         });
         this.element.querySelectorAll('.tracker-config').forEach(n => {
             n.addEventListener('click', this._onConfig.bind(this));
+        });
+        this.element.querySelectorAll('.tracker-visibility').forEach(n => {
+            n.addEventListener('click', this._onToggleVisibility.bind(this));
         });
     }
 
@@ -909,6 +926,19 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
         const btn = event.currentTarget;
         const actorId = btn.dataset.actorId;
         new TrackerConfigApp(actorId).render(true);
+    }
+
+    async _onToggleVisibility(event) {
+        event.preventDefault();
+        const btn = event.currentTarget;
+        const actorId = btn.dataset.actorId;
+        const actor = game.actors.get(actorId);
+        if (!actor) return;
+
+        const current = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
+        const next = current === 'inherit' ? 'visible' : current === 'visible' ? 'hidden' : 'inherit';
+        await actor.setFlag(MODULE_ID, 'visibilityMode', next);
+        this.render();
     }
 }
 

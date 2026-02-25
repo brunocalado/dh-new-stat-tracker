@@ -636,6 +636,18 @@ input:checked + .slider {
         color: #e54e4e;
     }
 
+    & .tracker-visibility--inherit {
+        color: #888;
+    }
+
+    & .tracker-visibility--visible {
+        color: #4caf50;
+    }
+
+    & .tracker-visibility--hidden {
+        color: #ff6b6b;
+    }
+
     & hr.tracker-hr {
         width: 100%;
     }

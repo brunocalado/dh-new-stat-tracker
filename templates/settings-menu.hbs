@@ -123,6 +123,19 @@
                         <strong>ON:</strong> Drains down (Max to 0). Alert at 0.
                     </span>
                 </div>
+
+                <div class="form-group custom-toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="hideFromPlayers" {{checked hideFromPlayers}}>
+                        <span class="slider"></span>
+                        <span class="toggle-label">Hide Tracker from Players</span>
+                    </label>
+                    <span class="hint">
+                        <strong>OFF:</strong> All players can see their tracker.<br>
+                        <strong>ON:</strong> Tracker is hidden from non-GM users by default.<br>
+                        Individual overrides can be set per actor in the Tracker Manager.
+                    </span>
+                </div>
             </div>
         </div>
 

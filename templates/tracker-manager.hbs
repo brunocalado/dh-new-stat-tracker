@@ -9,6 +9,7 @@
                 <span class="tracker-user-name">User: {{this.userName}}</span>
             </div>
             <div class="tracker-controls flexrow">
+                <button type="button" class="tracker-visibility tracker-btn tracker-visibility--{{this.visibilityMode}}" data-actor-id="{{this.actorId}}" title="{{#if (eq this.visibilityMode 'visible')}}Always Visible{{else if (eq this.visibilityMode 'hidden')}}Always Hidden{{else}}Inherit Global{{/if}}"><i class="fas {{#if (eq this.visibilityMode 'visible')}}fa-eye{{else if (eq this.visibilityMode 'hidden')}}fa-eye-slash{{else}}fa-link{{/if}}"></i></button>
                 <button type="button" class="tracker-config tracker-btn" data-actor-id="{{this.actorId}}" title="Configure Max Value"><i class="fas fa-cog"></i></button>
                 <button type="button" class="tracker-adjust tracker-btn" data-actor-id="{{this.actorId}}" data-action="decrease"><i class="fas fa-minus"></i></button>
                 <span class="tracker-value">{{this.value}} / {{this.max}}</span>
@@ -16,7 +17,7 @@
             </div>
         </div>
         {{else}}
-        <p>No linked characters found!</p> 
+        <p>No linked characters found!</p>
         <p>How To: Right-click the player in the Player List, select User Configuration, and assign an Actor from the Character dropdown menu (ensure the user has Owner permissions for that Actor first).</p>
         {{/each}}
     </div>
