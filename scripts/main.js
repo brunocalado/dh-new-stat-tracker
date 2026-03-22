@@ -157,7 +157,7 @@ function _buildEffectData(rule, targetMap = RULE_TARGET_MAP) {
     };
 }
 
-async function _applyRuleEffect(actor, rule, times = 1, targetMap = RULE_TARGET_MAP) {
+async function _applyRuleEffect(actor, rule, times = 1, targetMap = RULE_TARGET_MAP, isReversal = false) {
     const target = targetMap[rule.target];
     if (!target) return;
 
@@ -180,6 +180,9 @@ async function _applyRuleEffect(actor, rule, times = 1, targetMap = RULE_TARGET_
             });
         }
     } else {
+        // Reversals undo existing AEs — if none exists, there is nothing to reverse
+        if (isReversal) return;
+
         const effectData = _buildEffectData(rule, targetMap);
         if (!effectData) return;
 
@@ -205,7 +208,7 @@ async function _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, r
                     await _applyRuleEffect(actor, rule, delta, targetMap);
                 } else if (delta < 0) {
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, Math.abs(delta), targetMap);
+                    await _applyRuleEffect(actor, reversed, Math.abs(delta), targetMap, true);
                 }
                 break;
             case 'unmark':
@@ -213,7 +216,7 @@ async function _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, r
                     await _applyRuleEffect(actor, rule, Math.abs(delta), targetMap);
                 } else if (delta > 0) {
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, delta, targetMap);
+                    await _applyRuleEffect(actor, reversed, delta, targetMap, true);
                 }
                 break;
             case 'maximum':
@@ -221,7 +224,7 @@ async function _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, r
                     await _applyRuleEffect(actor, rule, 1, targetMap);
                 } else if (oldValue === effectiveMax && newValue !== effectiveMax) {
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, 1, targetMap);
+                    await _applyRuleEffect(actor, reversed, 1, targetMap, true);
                 }
                 break;
             case 'minimum':
@@ -229,7 +232,7 @@ async function _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, r
                     await _applyRuleEffect(actor, rule, 1, targetMap);
                 } else if (oldValue === 0 && newValue !== 0) {
                     const reversed = { ...rule, action: _reverseAction(rule.action) };
-                    await _applyRuleEffect(actor, reversed, 1, targetMap);
+                    await _applyRuleEffect(actor, reversed, 1, targetMap, true);
                 }
                 break;
         }
