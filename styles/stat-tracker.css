@@ -710,6 +710,17 @@
         color: #e54e4e;
     }
 
+    & .tracker-visibility {
+        width: auto !important;
+        min-width: 90px;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        white-space: nowrap;
+    }
+
     & .tracker-visibility--inherit {
         color: #888;
     }
@@ -720,6 +731,10 @@
 
     & .tracker-visibility--hidden {
         color: #ff6b6b;
+    }
+
+    & .tracker-visibility--gm-hidden {
+        color: #ff9800;
     }
 
     & hr.tracker-hr {

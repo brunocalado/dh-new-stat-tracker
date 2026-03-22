@@ -9,7 +9,10 @@
                 <span class="tracker-user-name">User: {{this.userName}}</span>
             </div>
             <div class="tracker-controls flexrow">
-                <button type="button" class="tracker-visibility tracker-btn tracker-visibility--{{this.visibilityMode}}" data-actor-id="{{this.actorId}}" title="{{#if (eq this.visibilityMode 'visible')}}Always Visible{{else if (eq this.visibilityMode 'hidden')}}Always Hidden{{else}}Inherit Global{{/if}}"><i class="fas {{#if (eq this.visibilityMode 'visible')}}fa-eye{{else if (eq this.visibilityMode 'hidden')}}fa-eye-slash{{else}}fa-link{{/if}}"></i></button>
+                <button type="button" class="tracker-visibility tracker-btn tracker-visibility--{{this.visibilityMode}}" data-actor-id="{{this.actorId}}" title="{{#if (eq this.visibilityMode 'visible')}}Always Visible to Players{{else if (eq this.visibilityMode 'hidden')}}Always Hidden from Players{{else if (eq this.visibilityMode 'gm-hidden')}}Hidden from GM view{{else}}Inherit Global Setting{{/if}}">
+                    <i class="fas {{#if (eq this.visibilityMode 'visible')}}fa-eye{{else if (eq this.visibilityMode 'hidden')}}fa-eye-slash{{else if (eq this.visibilityMode 'gm-hidden')}}fa-user-slash{{else}}fa-link{{/if}}"></i>
+                    <span>{{#if (eq this.visibilityMode 'visible')}}Visible{{else if (eq this.visibilityMode 'hidden')}}Hidden{{else if (eq this.visibilityMode 'gm-hidden')}}GM Off{{else}}Inherit{{/if}}</span>
+                </button>
                 <button type="button" class="tracker-config tracker-btn" data-actor-id="{{this.actorId}}" title="Configure Max Value"><i class="fas fa-cog"></i></button>
                 <button type="button" class="tracker-adjust tracker-btn" data-actor-id="{{this.actorId}}" data-action="decrease"><i class="fas fa-minus"></i></button>
                 <span class="tracker-value">{{this.value}} / {{this.max}}</span>

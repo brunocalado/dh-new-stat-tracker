@@ -280,10 +280,12 @@ function _getActorMax(actor, globalMax) {
 }
 
 function _isTrackerVisibleForUser(actor) {
-    if (game.user.isGM) return true;
     const mode = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
+    // GM only sees the tracker if the actor hasn't been explicitly hidden from their view.
+    if (game.user.isGM) return mode !== 'gm-hidden';
     if (mode === 'visible') return true;
     if (mode === 'hidden') return false;
+    // gm-hidden doesn't affect player visibility — they fall through to the global setting.
     return !game.settings.get(MODULE_ID, 'hideFromPlayers');
 }
 
@@ -854,7 +856,7 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
             resizable: true
         },
         position: {
-            width: 400,
+            width: 540,
             height: "auto"
         }
     };
@@ -942,7 +944,8 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
         if (!actor) return;
 
         const current = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
-        const next = current === 'inherit' ? 'visible' : current === 'visible' ? 'hidden' : 'inherit';
+        // Cycle: inherit → visible → hidden → gm-hidden → inherit
+        const next = current === 'inherit' ? 'visible' : current === 'visible' ? 'hidden' : current === 'hidden' ? 'gm-hidden' : 'inherit';
         await actor.setFlag(MODULE_ID, 'visibilityMode', next);
         this.render();
     }
