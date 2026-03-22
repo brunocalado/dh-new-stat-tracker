@@ -200,6 +200,8 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
                         <option value="hpMax">HP Max</option>
                         <option value="stressMax">Stress Max</option>
                         <option value="scars">Scars</option>
+                        <option value="evasion">Evasion</option>
+                        <option value="spellcasting">Spellcasting</option>
                     </select>
                     <select class="rule-action" name="ruleAction">
                         <option value="add">Add</option>

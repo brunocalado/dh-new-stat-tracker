@@ -83,7 +83,9 @@ const RULE_TARGET_MAP = {
     hope:      { key: 'system.resources.hope.max',      name: 'DHStatTracker: Hope' },
     hpMax:     { key: 'system.resources.hitPoints.max',  name: 'DHStatTracker: HP' },
     stressMax: { key: 'system.resources.stress.max',     name: 'DHStatTracker: Stress' },
-    scars:     { key: 'system.scars',                    name: 'DHStatTracker: Scars' }
+    scars:        { key: 'system.scars',                         name: 'DHStatTracker: Scars' },
+    evasion:      { key: 'system.evasion',                       name: 'DHStatTracker: Evasion' },
+    spellcasting: { key: 'system.bonuses.roll.spellcast.bonus',  name: 'DHStatTracker: Spellcasting' }
 };
 
 const ADV_RULE_TARGET_MAP = {
