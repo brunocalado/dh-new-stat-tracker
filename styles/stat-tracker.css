@@ -733,7 +733,22 @@
         color: #ff6b6b;
     }
 
-    & .tracker-visibility--gm-hidden {
+    & .tracker-gm-toggle {
+        width: auto !important;
+        min-width: 70px;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        white-space: nowrap;
+    }
+
+    & .tracker-gm-toggle--visible {
+        color: #888;
+    }
+
+    & .tracker-gm-toggle--hidden {
         color: #ff9800;
     }
 

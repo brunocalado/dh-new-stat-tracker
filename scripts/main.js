@@ -281,11 +281,11 @@ function _getActorMax(actor, globalMax) {
 
 function _isTrackerVisibleForUser(actor) {
     const mode = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
-    // GM only sees the tracker if the actor hasn't been explicitly hidden from their view.
-    if (game.user.isGM) return mode !== 'gm-hidden';
+    // GM visibility is controlled independently via the gmHidden flag so the GM can
+    // hide individual trackers from their own view without affecting player visibility.
+    if (game.user.isGM) return !actor.getFlag(MODULE_ID, 'gmHidden');
     if (mode === 'visible') return true;
     if (mode === 'hidden') return false;
-    // gm-hidden doesn't affect player visibility — they fall through to the global setting.
     return !game.settings.get(MODULE_ID, 'hideFromPlayers');
 }
 
@@ -876,13 +876,15 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
             const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
             const effectiveMax = _getActorMax(actor, settings.max);
             const visibilityMode = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
+            const gmHidden = actor.getFlag(MODULE_ID, 'gmHidden') ?? false;
             return {
                 actorId: actor.id,
                 actorName: actor.name,
                 userName: u.name,
                 value: current,
                 max: effectiveMax,
-                visibilityMode
+                visibilityMode,
+                gmHidden
             };
         });
 
@@ -901,6 +903,9 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
         });
         this.element.querySelectorAll('.tracker-visibility').forEach(n => {
             n.addEventListener('click', this._onToggleVisibility.bind(this));
+        });
+        this.element.querySelectorAll('.tracker-gm-toggle').forEach(n => {
+            n.addEventListener('click', this._onToggleGmVisibility.bind(this));
         });
     }
 
@@ -944,9 +949,28 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
         if (!actor) return;
 
         const current = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
-        // Cycle: inherit → visible → hidden → gm-hidden → inherit
-        const next = current === 'inherit' ? 'visible' : current === 'visible' ? 'hidden' : current === 'hidden' ? 'gm-hidden' : 'inherit';
+        // Cycle player visibility: inherit → visible → hidden → inherit
+        const next = current === 'inherit' ? 'visible' : current === 'visible' ? 'hidden' : 'inherit';
         await actor.setFlag(MODULE_ID, 'visibilityMode', next);
+        this.render();
+    }
+
+    /**
+     * Toggles the GM-specific hidden flag for an actor's tracker.
+     * This is independent of player visibility — the GM can hide a tracker from their
+     * own view without affecting what players see.
+     * Triggered by a click on the `.tracker-gm-toggle` button.
+     * @param {PointerEvent} event
+     */
+    async _onToggleGmVisibility(event) {
+        event.preventDefault();
+        const btn = event.currentTarget;
+        const actorId = btn.dataset.actorId;
+        const actor = game.actors.get(actorId);
+        if (!actor) return;
+
+        const current = actor.getFlag(MODULE_ID, 'gmHidden') ?? false;
+        await actor.setFlag(MODULE_ID, 'gmHidden', !current);
         this.render();
     }
 }
