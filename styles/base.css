@@ -1,0 +1,21 @@
+/* ============================================================
+   base.css — Shared animations and global module elements
+   ============================================================ */
+
+/* Prefixed with module ID to avoid @keyframes name collisions globally. */
+@keyframes dh-new-stat-tracker-slideIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dh-new-stat-tracker-pulse {
+    0%   { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--stat-color), transparent 50%); }
+    50%  { box-shadow: 0 0 8px 4px color-mix(in srgb, var(--stat-color), transparent 30%); }
+    100% { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--stat-color), transparent 50%); }
+}
+
+/* ── DAGGERHEART SYSTEM MENU BUTTON ───────────────────────── */
+.dh-new-stat-tracker-menu-btn {
+    margin-top: 10px;
+    width: 100%;
+}

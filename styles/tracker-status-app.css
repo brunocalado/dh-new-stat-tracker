@@ -1,0 +1,138 @@
+/* ============================================================
+   tracker-status-app.css — TrackerStatusApp (GM dashboard) and
+   TrackerConfigApp (per-actor max modifier).
+   Scoped under .dh-new-stat-tracker (module ID class).
+   ============================================================ */
+
+/* Remove window-content padding so the wrapper fills the full area.
+   Targets by ID + module class to avoid affecting other apps. */
+#tracker-status-app.dh-new-stat-tracker .window-content,
+#tracker-config-app.dh-new-stat-tracker .window-content {
+    padding: 0 !important;
+}
+
+.dh-new-stat-tracker {
+    & .tracker-status-wrapper {
+        background: var(--color-bg-secondary, #222);
+        padding: 10px;
+        height: 100%;
+
+        & .tracker-item {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            margin-bottom: 5px;
+            border-bottom: 1px solid var(--color-border, #333);
+            padding-bottom: 5px;
+        }
+
+        & .tracker-actor-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        & .tracker-actor-name {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        & .tracker-user-name {
+            font-size: 0.8em;
+            color: var(--color-text-secondary, #777);
+        }
+
+        & .tracker-controls {
+            flex: 0 0 auto;
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 5px;
+        }
+
+        & .tracker-btn {
+            width: 30px;
+            line-height: 24px;
+        }
+
+        & .tracker-value {
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+            font-size: 1.2em;
+            white-space: nowrap;
+        }
+
+        & .tracker-config-row {
+            width: 100%;
+            justify-content: space-between;
+
+            &--center {
+                align-items: center;
+            }
+        }
+
+        & .tracker-config-controls {
+            flex: 0 0 auto;
+            gap: 5px;
+            align-items: center;
+        }
+
+        & .tracker-config-gap {
+            align-items: center;
+            gap: 10px;
+        }
+
+        & .tracker-modifier-value {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        & .tracker-effective-label {
+            font-weight: bold;
+        }
+
+        /* Effective max shown in the tracker accent colour for quick scanning */
+        & .tracker-effective-value {
+            font-weight: bold;
+            color: #e54e4e;
+        }
+
+        /* ── VISIBILITY BUTTON STATES ────────────────────────── */
+        & .tracker-visibility {
+            width: auto !important;
+            min-width: 90px;
+            padding: 0 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        & .tracker-visibility--inherit { color: var(--color-text-secondary, #888); }
+        & .tracker-visibility--visible { color: var(--color-level-success, #4caf50); }
+        & .tracker-visibility--hidden  { color: var(--color-level-warning, #ff6b6b); }
+
+        /* ── GM TOGGLE BUTTON STATES ─────────────────────────── */
+        & .tracker-gm-toggle {
+            width: auto !important;
+            min-width: 70px;
+            padding: 0 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        & .tracker-gm-toggle--visible { color: var(--color-text-secondary, #888); }
+        & .tracker-gm-toggle--hidden  { color: var(--color-level-important, #ff9800); }
+
+        & hr.tracker-hr {
+            width: 100%;
+        }
+    }
+}

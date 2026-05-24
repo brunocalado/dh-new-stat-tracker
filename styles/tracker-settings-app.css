@@ -1,0 +1,351 @@
+/* ============================================================
+   tracker-settings-app.css — TrackerSettingsApp and
+   AdversaryTrackerSettingsApp.
+   Scoped under .dh-new-stat-tracker (the module ID class added
+   via DEFAULT_OPTIONS.classes), then under .tracker-settings-wrapper.
+   ============================================================ */
+
+.dh-new-stat-tracker {
+    & .tracker-settings-wrapper {
+        /* Module-scoped custom properties — prefixed to prevent collisions */
+        --dh-new-stat-tracker-accent:    #C9A060;    /* Daggerheart Gold */
+        --dh-new-stat-tracker-card-bg:   rgba(255, 255, 255, 0.03);
+        --dh-new-stat-tracker-border:    rgba(255, 255, 255, 0.1);
+        --dh-new-stat-tracker-text:      #f0f0e0;
+        --dh-new-stat-tracker-text-dim:  #aaa;
+        --dh-new-stat-tracker-input-bg:  rgba(0, 0, 0, 0.3);
+
+        font-family: var(--font-primary);
+        color: var(--dh-new-stat-tracker-text);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+
+        /* ── INPUTS ──────────────────────────────────────────── */
+        & input[type="text"],
+        & input[type="number"] {
+            background: var(--dh-new-stat-tracker-input-bg);
+            border: 1px solid var(--dh-new-stat-tracker-border);
+            color: var(--color-text-primary, #fff);
+            border-radius: 4px;
+            height: 32px;
+            padding: 0 10px;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        & input:focus {
+            outline: none;
+            border-color: var(--dh-new-stat-tracker-accent);
+            box-shadow: 0 0 5px rgba(201, 160, 96, 0.2);
+        }
+
+        & input[type=range] {
+            width: 100%;
+            accent-color: var(--dh-new-stat-tracker-accent);
+        }
+
+        /* ── TAB NAVIGATION ──────────────────────────────────── */
+        & .tracker-nav {
+            display: flex;
+            gap: 10px;
+            padding: 0 10px;
+            margin-bottom: 15px;
+
+            & a.item {
+                padding: 10px 20px;
+                border-radius: 6px 6px 0 0;
+                background: transparent;
+                color: var(--dh-new-stat-tracker-text-dim);
+                font-weight: bold;
+                font-size: 14px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border: 1px solid transparent;
+                border-bottom: none;
+                transition: all 0.2s ease;
+                cursor: pointer;
+
+                &:hover {
+                    color: var(--color-text-primary, #fff);
+                    background: rgba(255, 255, 255, 0.05);
+                }
+
+                &.active {
+                    color: var(--dh-new-stat-tracker-accent);
+                    border-color: var(--dh-new-stat-tracker-border);
+                    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+                    background: rgba(255, 255, 255, 0.05);
+                }
+            }
+        }
+
+        /* ── TAB CONTENT ─────────────────────────────────────── */
+        & .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 5px;
+
+            & .tab {
+                display: none;
+                animation: dh-new-stat-tracker-slideIn 0.3s ease-out;
+
+                &.active {
+                    display: block;
+                }
+            }
+        }
+
+        /* ── CONFIG CARDS ────────────────────────────────────── */
+        & .config-card {
+            background: var(--dh-new-stat-tracker-card-bg);
+            border: 1px solid var(--dh-new-stat-tracker-border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+
+            & h3 {
+                padding-bottom: 5px;
+                margin: 0 0 15px 0;
+                color: var(--dh-new-stat-tracker-accent);
+                font-size: 1.1em;
+                text-transform: uppercase;
+                opacity: 0.9;
+            }
+        }
+
+        /* ── FORM GROUPS ─────────────────────────────────────── */
+        & .form-group {
+            margin-bottom: 15px;
+
+            & label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 4px;
+                color: var(--color-text-primary, #e0e0e0);
+            }
+
+            & .hint {
+                display: block;
+                font-size: 12px;
+                color: var(--dh-new-stat-tracker-text-dim);
+                margin-top: 4px;
+                line-height: 1.4;
+                font-style: italic;
+            }
+
+            &.custom-toggle-group {
+                display: block !important;
+            }
+        }
+
+        /* ── COLOR PICKER ────────────────────────────────────── */
+        & .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--dh-new-stat-tracker-input-bg);
+            padding: 5px;
+            border: 1px solid var(--dh-new-stat-tracker-border);
+            border-radius: 4px;
+            width: fit-content;
+        }
+
+        & input[type="color"].color-input {
+            border: none;
+            width: 60px;
+            height: 30px;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+        }
+
+        /* ── FILE PICKER GROUP ───────────────────────────────── */
+        & .file-input-group {
+            display: flex;
+            gap: 5px;
+
+            & button {
+                flex: 0 0 40px;
+                background: var(--dh-new-stat-tracker-input-bg);
+                border: 1px solid var(--dh-new-stat-tracker-border);
+                color: var(--dh-new-stat-tracker-text-dim);
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    color: var(--color-text-primary, #fff);
+                    border-color: var(--dh-new-stat-tracker-accent);
+                }
+            }
+        }
+
+        /* ── TOGGLE SWITCH ───────────────────────────────────── */
+        & .toggle-switch {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            cursor: pointer;
+            gap: 12px;
+            margin: 0;
+            padding: 5px 0;
+            width: 100%;
+
+            & input {
+                display: none;
+            }
+        }
+
+        & .slider {
+            position: relative;
+            width: 46px;
+            height: 24px;
+            background-color: var(--color-bg-btn, #333);
+            border-radius: 24px;
+            transition: 0.4s;
+            border: 1px solid var(--color-border-dark, #555);
+            flex-shrink: 0;
+
+            &:before {
+                position: absolute;
+                content: "";
+                height: 16px;
+                width: 16px;
+                left: 4px;
+                bottom: 3px;
+                background-color: var(--color-text-primary, white);
+                border-radius: 50%;
+                transition: 0.4s;
+            }
+        }
+
+        & input:checked + .slider {
+            background-color: var(--dh-new-stat-tracker-accent);
+            border-color: var(--dh-new-stat-tracker-accent);
+
+            &:before {
+                transform: translateX(20px);
+                background-color: var(--color-text-primary, #fff);
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        & .toggle-label {
+            font-weight: bold;
+            color: var(--dh-new-stat-tracker-text);
+            line-height: 1.5;
+            margin-top: 1px;
+        }
+
+        /* ── CONDITIONAL PICKER CONTAINERS ──────────────────── */
+        & .custom-bg-picker-container,
+        & .custom-border-picker-container {
+            display: none;
+            padding-left: 20px;
+            border-left: 2px solid var(--color-border, #444);
+            margin-top: 10px;
+
+            &.visible {
+                display: block;
+            }
+        }
+
+        /* ── FOOTER (Save button row) ────────────────────────── */
+        & .sheet-footer {
+            border-top: 1px solid var(--dh-new-stat-tracker-border);
+            padding-top: 15px;
+            margin-top: auto;
+            justify-content: flex-end;
+
+            & button {
+                background: linear-gradient(to bottom, var(--color-bg-btn-hover, #4a4a4a), var(--color-bg-btn, #2a2a2a));
+                border: 1px solid var(--color-border-dark, #000);
+                color: var(--color-text-primary, #e0e0e0);
+                padding: 8px 24px;
+                font-weight: bold;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+                &:hover {
+                    color: var(--color-text-primary, #fff);
+                    box-shadow: 0 0 10px var(--dh-new-stat-tracker-accent);
+                    border-color: var(--dh-new-stat-tracker-accent);
+                }
+            }
+        }
+
+        /* ── RULES TAB ───────────────────────────────────────── */
+        & .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        & .rule-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+
+            & select {
+                flex: 1;
+                background: var(--color-bg-secondary, #1a1a1a);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: var(--dh-new-stat-tracker-text);
+                border-radius: 4px;
+                height: 32px;
+                padding: 0 6px;
+                font-size: 13px;
+                cursor: pointer;
+
+                & option {
+                    background: var(--color-bg-secondary, #1a1a1a);
+                    color: var(--dh-new-stat-tracker-text);
+                }
+
+                &:focus {
+                    outline: none;
+                    border-color: var(--dh-new-stat-tracker-accent);
+                }
+            }
+
+            & .rule-delete {
+                flex: 0 0 32px;
+                height: 32px;
+                background: rgba(200, 50, 50, 0.2);
+                border: 1px solid rgba(200, 50, 50, 0.3);
+                color: var(--color-level-warning, #ff6b6b);
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: rgba(200, 50, 50, 0.4);
+                    border-color: var(--color-level-warning, #ff6b6b);
+                }
+            }
+        }
+
+        & .rule-add-btn {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            color: var(--dh-new-stat-tracker-text-dim);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+
+            &:hover {
+                color: var(--color-text-primary, #fff);
+                border-color: var(--dh-new-stat-tracker-accent);
+                background: rgba(255, 255, 255, 0.08);
+            }
+        }
+    }
+}

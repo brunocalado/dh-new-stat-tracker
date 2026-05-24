@@ -7,7 +7,8 @@
  * 4. Operational Applications (Status and Config per Actor).
  */
 
-import { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, registerModuleSettings, registerDaggerheartMenuButton } from './config.js';
+import { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE } from './constants.js';
+import { registerModuleSettings, registerDaggerheartMenuButton } from './config.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -319,12 +320,15 @@ const renderHook = (app, _html) => {
 Hooks.on('renderCharacterSheet', renderHook);
 // DaggerheartPlus Module Support: Hook to render the tracker on the DH+ character sheet
 Hooks.on('renderDaggerheartPlusCharacterSheet', renderHook);
-Hooks.on('renderActorSheet', (app, html) => {
+Hooks.on('renderActorSheet', (app, _html) => {
     const actor = app.document;
-    if (actor?.type === 'character' &&
-       (app.element.find('.character-row').length || app.element.find('.core-stats').length)) {
-       renderHook(app, html);
-    }
+    if (!actor || actor.type !== 'character') return;
+    // Normalize: v1 Application passes a jQuery wrapper, ApplicationV2 passes HTMLElement.
+    const el = (app.element instanceof HTMLElement) ? app.element : app.element?.[0];
+    if (!el) return;
+    if (!el.querySelector('.character-row') && !el.querySelector('.core-stats')) return;
+    if (!_isTrackerVisibleForUser(actor)) return;
+    requestAnimationFrame(() => _injectAttribute(el, actor));
 });
 
 // Adversary Sheet Support (ApplicationV2 — fires renderAdversarySheet, not renderActorSheet)
@@ -848,8 +852,11 @@ Hooks.on('updateActor', async (actor, changes, _options, userId) => {
 
 // ... TrackerStatusApp and TrackerConfigApp application classes remain unchanged ...
 class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
+    static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
+
     static DEFAULT_OPTIONS = {
         id: "tracker-status-app",
+        classes: [MODULE_ID],
         tag: "form",
         window: {
             title: "Tracker Status",
@@ -981,8 +988,11 @@ class TrackerConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this.actorId = actorId;
     }
 
+    static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
+
     static DEFAULT_OPTIONS = {
         id: "tracker-config-app",
+        classes: [MODULE_ID],
         tag: "form",
         window: {
             title: "Tracker Configuration",

@@ -1,0 +1,90 @@
+/* ============================================================
+   chat-card.css — Chat notification card for tracker events.
+   Not scoped to an app class because chat messages are rendered
+   in the Foundry sidebar, outside any module window.
+   The .dh-new-stat-tracker-chat-card class itself is the scope.
+   ============================================================ */
+
+.dh-new-stat-tracker-chat-card {
+    /* Daggerheart Gold — intentional brand colour, not a theme variable */
+    --dh-new-stat-tracker-gold: #C9A060;
+
+    border: 2px solid var(--dh-new-stat-tracker-gold);
+    border-radius: 8px;
+    overflow: hidden;
+
+    & .card-header {
+        /* Dark header is intentional: creates contrast with the card body below */
+        background: #191919 !important;
+        padding: 8px;
+        border-bottom: 2px solid var(--dh-new-stat-tracker-gold);
+
+        & h3 {
+            margin: 0;
+            font-weight: bold;
+            color: var(--dh-new-stat-tracker-gold) !important;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+    }
+
+    & .card-content {
+        /* Dark background ensures the overlay + glow effect reads correctly */
+        background-color: #333;
+        background-image: var(--chat-bg-image, none);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        padding: 20px;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+    }
+
+    & .card-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 0;
+    }
+
+    & .card-body {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+    }
+
+    & .actor-name {
+        color: var(--color-text-primary, #ffffff);
+        font-size: 1.5em;
+        font-weight: 800;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 #000;
+    }
+
+    & .display-value {
+        color: var(--color-text-primary, #ffffff) !important;
+        font-size: 3.5em;
+        font-weight: bold;
+        /* Shadow colour injected at runtime via --chat-shadow-color inline style */
+        text-shadow: 0 0 15px var(--chat-shadow-color, #00b0ff), 2px 2px 0 #000;
+        font-family: var(--font-mono, 'Lato', sans-serif);
+        line-height: 1;
+    }
+
+    & .status-text {
+        color: var(--color-level-warning, #ff6b6b);
+        font-size: 1em;
+        font-weight: bold;
+        margin-top: 5px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+}

@@ -1,0 +1,224 @@
+/* ============================================================
+   tracker-injection.css — Tracker UI injected into actor sheets.
+   Scoped under .daggerheart.sheet.actor because the tracker
+   elements are injected directly into the system's DOM tree.
+   All custom class names are module-prefixed to avoid conflicts.
+   ============================================================ */
+
+/* ── SHARED SECTION BASE ───────────────────────────────────── */
+.daggerheart.sheet.actor {
+    & .dh-new-stat-tracker-section {
+        /* Defaults — overridden at runtime via JS inline style.setProperty() */
+        --stat-color: #e54e4e;
+        --stat-icon-color: #e54e4e;
+        --stat-bg: #18162e;
+        --stat-border: #f3c267;
+
+        position: relative;
+        z-index: 10;
+        background-color: var(--stat-bg);
+        border: 1px solid var(--stat-border);
+        border-radius: 6px;
+        color: var(--stat-color);
+
+        /* Flexbox layout for the filler lines + central content */
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        overflow: hidden;
+
+        & .attribute-pip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--stat-icon-color);
+            font-size: var(--font-size-14, 14px);
+            transition: transform 0.1s ease, color 0.1s ease;
+            user-select: none;
+            width: 16px;
+            height: 16px;
+
+            &:hover {
+                transform: scale(1.25);
+                color: color-mix(in srgb, var(--stat-icon-color), white 40%);
+            }
+
+            &.no-interact {
+                cursor: default;
+                pointer-events: none;
+                opacity: 0.8;
+            }
+        }
+
+        /* Alert state: pulsing glow when the tracker is at its threshold. */
+        &.attribute-max {
+            animation: dh-new-stat-tracker-pulse 1.4s ease-in-out infinite;
+            border-color: var(--stat-color);
+        }
+    }
+
+    & .character-header-sheet .character-row { margin-bottom: 8px; }
+
+    /* ── STANDARD LAYOUT ─── */
+    & .dh-new-stat-tracker-section--standard {
+        width: 100%;
+        height: 30px;
+        margin-top: 4px;
+        margin-bottom: 8px;
+        margin-left: 0;
+        padding: 0 10px;
+
+        & h4 {
+            font-size: var(--font-size-14, 14px);
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--stat-color);
+            margin: 0;
+            line-height: 1;
+        }
+    }
+
+    /* ── DAGGERHEART PLUS LAYOUT ─── */
+    /* DaggerheartPlus Module Support: specific layout for the DH+ sheet header */
+    & .dh-new-stat-tracker-section--dhplus {
+        padding: 4px 8px;
+
+        & .attribute-pips {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+
+        & .stat-label {
+            font-size: var(--font-size-12, 12px);
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--stat-color);
+            text-align: center;
+        }
+    }
+
+    /* ── ADVERSARY LAYOUT ─── */
+    & .dh-new-stat-tracker-section--adversary {
+        width: 100%;
+        height: 30px;
+        margin-top: 4px;
+        margin-bottom: 8px;
+        padding: 0 10px;
+
+        & h4 {
+            font-size: var(--font-size-14, 14px);
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--stat-color);
+            margin: 0;
+            line-height: 1;
+        }
+    }
+
+    /* ── SHARED INNER ELEMENTS ─── */
+
+    /* Central wrapper: keeps label + pips together while filler lines stretch */
+    & .dh-tracker-content-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* The "spring" filler lines on either side of the central content */
+    & .dh-filler-line {
+        flex-grow: 1;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--stat-color), transparent);
+        opacity: 0.5;
+        min-width: 0;
+        border-radius: 2px;
+    }
+}
+
+/* ── SLEEK UI MODULE LAYOUT ─────────────────────────────────── */
+/* Sleek UI Module Support: vertical layout injected into the sidebar */
+.daggerheart.sheet.actor.sleek-ui {
+    & .dh-new-stat-tracker-section--sleek {
+        margin: 4px 12px 0 12px;
+        width: calc(100% - 24px);
+        box-sizing: border-box;
+        padding: 8px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-border);
+        background: var(--gradient-card);
+        position: relative;
+        z-index: 2;
+        font-family: var(--font-primary);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        /* Push .favorites down so it doesn't overlap our tracker */
+        & + .favorites {
+            margin-top: 0;
+            padding-top: 8px;
+        }
+
+        & .dh-filler-line {
+            display: none;
+        }
+
+        & .dh-tracker-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        & .stat-label,
+        & h4 {
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-semibold);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--stat-color);
+            margin: 0;
+            border: none;
+        }
+
+        & .attribute-pips {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Empty pips use Sleek UI's border color for visual integration */
+        & .attribute-pip .fa-regular {
+            color: var(--color-border);
+        }
+
+        /* Alert state: glow instead of pulse to match Sleek UI's aesthetic */
+        &.attribute-max {
+            box-shadow: 0 0 9px -1px var(--stat-color);
+            border-color: var(--stat-color);
+        }
+
+        & .attribute-pips-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+
+            & .attribute-pips {
+                display: flex;
+                gap: 4px;
+                flex-wrap: nowrap;
+                justify-content: center;
+            }
+        }
+    }
+}

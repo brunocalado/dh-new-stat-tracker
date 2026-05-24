@@ -1,60 +1,44 @@
 /**
  * Settings, Constants, and Static Definitions
  * Responsible for:
- * 1. Defining global module constants.
- * 2. Registering settings in Foundry VTT.
- * 3. Managing the Settings Menu (UI).
- * 4. Integrations with System UI (Menu Buttons).
+ * 1. Registering settings in Foundry VTT.
+ * 2. Managing the Settings Menu (UI).
+ * 3. Integrations with System UI (Menu Buttons).
  */
+
+import { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, AVAILABLE_ICONS } from './constants.js';
+
+// Re-export constants so existing importers that pull from config.js keep working.
+export { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, AVAILABLE_ICONS };
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-// Exported Constants
-export const MODULE_ID = 'dh-new-stat-tracker';
-export const FLAG_KEY  = 'value';
-export const ADV_FLAG_KEY = 'adversaryValue';
-export const MAX_POSSIBLE_VALUE = 15;
-export const ADV_MAX_POSSIBLE_VALUE = 9;
-
-export const AVAILABLE_ICONS = [
-    "",
-    "fa-solid fa-shield-halved", "fa-solid fa-skull", "fa-solid fa-dragon", "fa-solid fa-hand-fist",
-    "fa-solid fa-map-location-dot", "fa-solid fa-compass", "fa-solid fa-key", "fa-solid fa-eye",
-    "fa-solid fa-mountain", "fa-solid fa-ghost", "fa-solid fa-hat-wizard", "fa-solid fa-book", "fa-solid fa-flask",
-    "fa-solid fa-bolt", "fa-solid fa-sun", "fa-solid fa-moon", "fa-solid fa-crown", "fa-solid fa-feather", "fa-solid fa-mask",
-    "fa-solid fa-hand-holding-heart", "fa-solid fa-music", "fa-solid fa-balance-scale", "fa-solid fa-trophy", "fa-solid fa-gem",
-    "fa-solid fa-hammer", "fa-solid fa-leaf", "fa-solid fa-anchor", "fa-solid fa-star", "fa-solid fa-khanda", "fa-solid fa-wand-magic-sparkles",
-    "fa-solid fa-scroll", "fa-solid fa-coins", "fa-solid fa-dice", "fa-solid fa-fire", "fa-solid fa-snowflake", "fa-solid fa-droplet",
-    "fa-solid fa-wind", "fa-solid fa-cloud-bolt", "fa-solid fa-brain", "fa-solid fa-person-running",
-    "fa-solid fa-campground", "fa-solid fa-landmark", "fa-solid fa-biohazard", "fa-solid fa-eye-slash",
-    "fa-solid fa-heart-pulse", "fa-solid fa-clover",
-    "fa-solid fa-vial", "fa-solid fa-hourglass-half", "fa-solid fa-spider", "fa-solid fa-hand-sparkles", "fa-solid fa-crosshairs",
-    "fa-solid fa-explosion", "fa-solid fa-ban", "fa-solid fa-handcuffs", "fa-solid fa-magnifying-glass", "fa-solid fa-mountain-sun",
-    "fa-solid fa-wand-magic", "fa-solid fa-user-ninja", "fa-solid fa-shoe-prints", "fa-solid fa-puzzle-piece",
-    "fa-solid fa-dungeon", "fa-solid fa-mound", "fa-solid fa-vault", "fa-solid fa-ring", "fa-solid fa-envelope-open-text",
-    "fa-solid fa-lightbulb", "fa-solid fa-bullseye", "fa-solid fa-seedling", "fa-solid fa-virus",
-    "fa-solid fa-link", "fa-solid fa-gears", "fa-solid fa-user-shield", "fa-solid fa-burst", "fa-solid fa-chess-knight"
-];
-
-// Helper to generate icon list for the select
+/**
+ * Builds the icon choice list for the <select> in the settings template.
+ * @returns {{ value: string, label: string }[]}
+ */
 function _getIconChoices() {
     return AVAILABLE_ICONS.reduce((acc, icon) => {
-        const value = icon;
-        const label = !icon ? "Default (Skull)" : icon.replace('fa-solid fa-', '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        acc.push({ value, label });
+        const label = !icon
+            ? "Default (Skull)"
+            : icon.replace('fa-solid fa-', '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        acc.push({ value: icon, label });
         return acc;
     }, []);
 }
 
 /**
- * Menu Application for complete settings
+ * Menu Application for the character tracker complete settings.
  */
 class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
-    // Static callback to trigger refresh on save
+    // Static callback to trigger a sheet refresh after saving.
     static onSaveCallback = null;
+
+    static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
 
     static DEFAULT_OPTIONS = {
         id: "tracker-settings-app",
+        classes: [MODULE_ID],
         tag: "form",
         window: { title: "Tracker Configuration", resizable: true },
         position: { width: 570, height: 600 }
@@ -64,6 +48,12 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
         content: { template: `modules/${MODULE_ID}/templates/settings-menu.hbs` }
     };
 
+    /**
+     * Builds the Handlebars context from current settings.
+     * Called from ApplicationV2 render lifecycle.
+     * @param {object} _options
+     * @returns {Promise<object>}
+     */
     async _prepareContext(_options) {
         return {
             // Core Settings
@@ -73,10 +63,11 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             attributeColor: game.settings.get(MODULE_ID, 'attributeColor'),
             iconColor: game.settings.get(MODULE_ID, 'iconColor'),
             attributeIcon: game.settings.get(MODULE_ID, 'attributeIcon'),
-            
+
             // Background Settings
             enableCustomBackground: game.settings.get(MODULE_ID, 'enableCustomBackground'),
             customBackgroundColor: game.settings.get(MODULE_ID, 'customBackgroundColor'),
+
             // Border Settings
             enableCustomBorder: game.settings.get(MODULE_ID, 'enableCustomBorder'),
             customBorderColor: game.settings.get(MODULE_ID, 'customBorderColor'),
@@ -85,13 +76,13 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             attributeVolume: game.settings.get(MODULE_ID, 'attributeVolume'),
             pipClickSound: game.settings.get(MODULE_ID, 'pipClickSound'),
             pipClickVolume: game.settings.get(MODULE_ID, 'pipClickVolume'),
-            
+
             // Chat Settings
             verbose: game.settings.get(MODULE_ID, 'attributeVerbose'),
             chatImage: game.settings.get(MODULE_ID, 'chatImage'),
             textMax: game.settings.get(MODULE_ID, 'textMax'),
             textDepleted: game.settings.get(MODULE_ID, 'textDepleted'),
-            
+
             // Rules
             trackerRules: JSON.parse(game.settings.get(MODULE_ID, 'trackerRules') || '[]'),
 
@@ -104,6 +95,12 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
         };
     }
 
+    /**
+     * Attaches non-action DOM listeners after each render.
+     * Called from ApplicationV2 render lifecycle.
+     * @param {object} context
+     * @param {object} options
+     */
     _onRender(context, options) {
         // --- TAB SWITCHING LOGIC ---
         const navItems = this.element.querySelectorAll('.tracker-nav .item');
@@ -113,72 +110,61 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             nav.addEventListener('click', (e) => {
                 e.preventDefault();
                 const targetTab = nav.dataset.tab;
-
-                // Update Nav State
                 navItems.forEach(n => n.classList.toggle('active', n.dataset.tab === targetTab));
-                
-                // Update Content State
                 tabItems.forEach(t => t.classList.toggle('active', t.dataset.tab === targetTab));
             });
         });
 
-        // --- CUSTOM BACKGROUND TOGGLE LOGIC ---
+        // --- CUSTOM BACKGROUND TOGGLE ---
         const bgToggle = this.element.querySelector('input[name="enableCustomBackground"]');
         const bgPickerContainer = this.element.querySelector('.custom-bg-picker-container');
-
         if (bgToggle && bgPickerContainer) {
-            const updateVisibility = () => {
-                bgPickerContainer.classList.toggle('visible', bgToggle.checked);
-            };
-            updateVisibility();
-            bgToggle.addEventListener('change', updateVisibility);
+            const updateBgVisibility = () => bgPickerContainer.classList.toggle('visible', bgToggle.checked);
+            updateBgVisibility();
+            bgToggle.addEventListener('change', updateBgVisibility);
         }
 
-        // --- CUSTOM BORDER TOGGLE LOGIC ---
+        // --- CUSTOM BORDER TOGGLE ---
         const borderToggle = this.element.querySelector('input[name="enableCustomBorder"]');
         const borderPickerContainer = this.element.querySelector('.custom-border-picker-container');
-
         if (borderToggle && borderPickerContainer) {
-            const updateBorderVisibility = () => {
-                borderPickerContainer.classList.toggle('visible', borderToggle.checked);
-            };
+            const updateBorderVisibility = () => borderPickerContainer.classList.toggle('visible', borderToggle.checked);
             updateBorderVisibility();
             borderToggle.addEventListener('change', updateBorderVisibility);
         }
 
-        // File Pickers
+        // --- FILE PICKERS ---
+        // Resolve the active FilePicker implementation so host environments (e.g. Forge)
+        // can substitute their own class without breaking this module.
+        const FP = foundry.applications.apps.FilePicker.implementation ?? foundry.applications.apps.FilePicker;
         this.element.querySelectorAll('button.file-picker').forEach(btn => {
             btn.addEventListener('click', event => {
                 event.preventDefault();
                 const target = event.currentTarget.dataset.target;
                 const type = event.currentTarget.dataset.type || "image";
                 const input = this.element.querySelector(`input[name="${target}"]`);
-                new foundry.applications.apps.FilePicker.implementation({
-                    type: type,
+                new FP({
+                    type,
                     current: input.value,
                     callback: path => { input.value = path; }
                 }).render(true);
             });
         });
 
-        // Range Display
-        const rangeInput = this.element.querySelector('input[name="attributeVolume"]');
-        const rangeDisplay = this.element.querySelector('.volume-display');
-        if (rangeInput && rangeDisplay) {
-            rangeInput.addEventListener('input', (e) => {
-                rangeDisplay.textContent = e.target.value;
-            });
+        // --- RANGE DISPLAY (volume sliders) ---
+        const alertVolRange = this.element.querySelector('input[name="attributeVolume"]');
+        const alertVolDisplay = this.element.querySelector('.volume-display');
+        if (alertVolRange && alertVolDisplay) {
+            alertVolRange.addEventListener('input', e => { alertVolDisplay.textContent = e.target.value; });
         }
 
-        const pipRangeInput = this.element.querySelector('input[name="pipClickVolume"]');
-        const pipRangeDisplay = this.element.querySelector('.pip-volume-display');
-        if (pipRangeInput && pipRangeDisplay) {
-            pipRangeInput.addEventListener('input', (e) => {
-                pipRangeDisplay.textContent = e.target.value;
-            });
+        const pipVolRange = this.element.querySelector('input[name="pipClickVolume"]');
+        const pipVolDisplay = this.element.querySelector('.pip-volume-display');
+        if (pipVolRange && pipVolDisplay) {
+            pipVolRange.addEventListener('input', e => { pipVolDisplay.textContent = e.target.value; });
         }
 
-        // --- RULES TAB LOGIC ---
+        // --- RULES TAB ---
         const rulesList = this.element.querySelector('.rules-list');
         const addRuleBtn = this.element.querySelector('.rule-add-btn');
 
@@ -218,23 +204,20 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             });
         }
 
-        // Form Submission
+        // --- FORM SUBMISSION ---
         this.element.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
 
-            // Core
             await game.settings.set(MODULE_ID, 'attributeName', formData.get('attributeName'));
             await game.settings.set(MODULE_ID, 'attributeMax', parseInt(formData.get('attributeMax')));
             await game.settings.set(MODULE_ID, 'attributeInverted', formData.get('attributeInverted') === 'on');
             await game.settings.set(MODULE_ID, 'attributeColor', formData.get('attributeColor'));
             await game.settings.set(MODULE_ID, 'iconColor', formData.get('iconColor'));
             await game.settings.set(MODULE_ID, 'attributeIcon', formData.get('attributeIcon'));
-            
-            // Background
+
             await game.settings.set(MODULE_ID, 'enableCustomBackground', formData.get('enableCustomBackground') === 'on');
             await game.settings.set(MODULE_ID, 'customBackgroundColor', formData.get('customBackgroundColor'));
-            // Border
             await game.settings.set(MODULE_ID, 'enableCustomBorder', formData.get('enableCustomBorder') === 'on');
             await game.settings.set(MODULE_ID, 'customBorderColor', formData.get('customBorderColor'));
 
@@ -243,13 +226,12 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             await game.settings.set(MODULE_ID, 'pipClickSound', formData.get('pipClickSound'));
             await game.settings.set(MODULE_ID, 'pipClickVolume', parseFloat(formData.get('pipClickVolume')));
 
-            // Chat
             await game.settings.set(MODULE_ID, 'attributeVerbose', formData.get('verbose') === 'on');
             await game.settings.set(MODULE_ID, 'chatImage', formData.get('chatImage'));
             await game.settings.set(MODULE_ID, 'textMax', formData.get('textMax'));
             await game.settings.set(MODULE_ID, 'textDepleted', formData.get('textDepleted'));
 
-            // Rules
+            // Collect rules from dynamically generated rows
             const ruleRows = this.element.querySelectorAll('.rule-row');
             const rules = Array.from(ruleRows).map(row => ({
                 id: row.dataset.ruleId,
@@ -259,26 +241,25 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
             }));
             await game.settings.set(MODULE_ID, 'trackerRules', JSON.stringify(rules));
 
-            // Visibility
             await game.settings.set(MODULE_ID, 'hideFromPlayers', formData.get('hideFromPlayers') === 'on');
 
             this.close();
-            
-            if (TrackerSettingsApp.onSaveCallback) {
-                TrackerSettingsApp.onSaveCallback();
-            }
+            if (TrackerSettingsApp.onSaveCallback) TrackerSettingsApp.onSaveCallback();
         });
     }
 }
 
 /**
- * Menu Application for adversary tracker settings (simplified: Identity + Mechanics only)
+ * Menu Application for adversary tracker settings (Identity + Mechanics + Rules).
  */
 class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
     static onSaveCallback = null;
 
+    static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
+
     static DEFAULT_OPTIONS = {
         id: "adversary-tracker-settings-app",
+        classes: [MODULE_ID],
         tag: "form",
         window: { title: "Adversary Tracker Configuration", resizable: true },
         position: { width: 570, height: 500 }
@@ -288,6 +269,12 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
         content: { template: `modules/${MODULE_ID}/templates/adversary-settings-menu.hbs` }
     };
 
+    /**
+     * Builds the Handlebars context from current adversary settings.
+     * Called from ApplicationV2 render lifecycle.
+     * @param {object} _options
+     * @returns {Promise<object>}
+     */
     async _prepareContext(_options) {
         return {
             attributeName: game.settings.get(MODULE_ID, 'advAttributeName'),
@@ -307,6 +294,12 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
         };
     }
 
+    /**
+     * Attaches non-action DOM listeners after each render.
+     * Called from ApplicationV2 render lifecycle.
+     * @param {object} context
+     * @param {object} options
+     */
     _onRender(context, options) {
         // --- TAB SWITCHING LOGIC ---
         const navItems = this.element.querySelectorAll('.tracker-nav .item');
@@ -321,31 +314,25 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             });
         });
 
-        // --- CUSTOM BACKGROUND TOGGLE LOGIC ---
+        // --- CUSTOM BACKGROUND TOGGLE ---
         const bgToggle = this.element.querySelector('input[name="enableCustomBackground"]');
         const bgPickerContainer = this.element.querySelector('.custom-bg-picker-container');
-
         if (bgToggle && bgPickerContainer) {
-            const updateVisibility = () => {
-                bgPickerContainer.classList.toggle('visible', bgToggle.checked);
-            };
-            updateVisibility();
-            bgToggle.addEventListener('change', updateVisibility);
+            const updateBgVisibility = () => bgPickerContainer.classList.toggle('visible', bgToggle.checked);
+            updateBgVisibility();
+            bgToggle.addEventListener('change', updateBgVisibility);
         }
 
-        // --- CUSTOM BORDER TOGGLE LOGIC ---
+        // --- CUSTOM BORDER TOGGLE ---
         const borderToggle = this.element.querySelector('input[name="enableCustomBorder"]');
         const borderPickerContainer = this.element.querySelector('.custom-border-picker-container');
-
         if (borderToggle && borderPickerContainer) {
-            const updateBorderVisibility = () => {
-                borderPickerContainer.classList.toggle('visible', borderToggle.checked);
-            };
+            const updateBorderVisibility = () => borderPickerContainer.classList.toggle('visible', borderToggle.checked);
             updateBorderVisibility();
             borderToggle.addEventListener('change', updateBorderVisibility);
         }
 
-        // --- RULES TAB LOGIC ---
+        // --- RULES TAB ---
         const rulesList = this.element.querySelector('.rules-list');
         const addRuleBtn = this.element.querySelector('.rule-add-btn');
 
@@ -387,7 +374,7 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             });
         }
 
-        // Form Submission
+        // --- FORM SUBMISSION ---
         this.element.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -404,7 +391,6 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             await game.settings.set(MODULE_ID, 'advCustomBorderColor', formData.get('customBorderColor'));
             await game.settings.set(MODULE_ID, 'hideAdversaryTracker', formData.get('hideAdversaryTracker') === 'on');
 
-            // Rules
             const ruleRows = this.element.querySelectorAll('.rule-row');
             const rules = Array.from(ruleRows).map(row => ({
                 id: row.dataset.ruleId,
@@ -415,16 +401,13 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             await game.settings.set(MODULE_ID, 'advTrackerRules', JSON.stringify(rules));
 
             this.close();
-
-            if (AdversaryTrackerSettingsApp.onSaveCallback) {
-                AdversaryTrackerSettingsApp.onSaveCallback();
-            }
+            if (AdversaryTrackerSettingsApp.onSaveCallback) AdversaryTrackerSettingsApp.onSaveCallback();
         });
     }
 }
 
 /**
- * Registers the button in the Daggerheart system sidebar menu.
+ * Registers the "Tracker Manager" button in the Daggerheart system sidebar menu.
  */
 export function registerDaggerheartMenuButton() {
     Hooks.on("renderDaggerheartMenu", (app, element, data) => {
@@ -432,9 +415,9 @@ export function registerDaggerheartMenuButton() {
 
         const myButton = document.createElement("button");
         myButton.type = "button";
-        myButton.innerHTML = `<i class="fas fa-tasks"></i> Tracker Manager`; 
+        myButton.innerHTML = `<i class="fas fa-tasks"></i> Tracker Manager`;
         myButton.classList.add("dh-custom-btn", "dh-new-stat-tracker-menu-btn");
-        
+
         myButton.onclick = () => {
             if (window.DHStatTracker) {
                 window.DHStatTracker.openManager();
@@ -458,13 +441,14 @@ export function registerDaggerheartMenuButton() {
 }
 
 /**
- * Registers all module settings.
- * @param {Function} refreshCallback - Function called when visual settings change.
+ * Registers all module settings and wires up the settings UI callbacks.
+ * Called during the `init` hook.
+ * @param {Function} refreshCallback - Called whenever a visual setting changes so all open sheets re-render.
  */
 export function registerModuleSettings(refreshCallback) {
     TrackerSettingsApp.onSaveCallback = refreshCallback;
 
-    // --- CORE SETTINGS (Hidden from standard menu) ---
+    // --- CORE SETTINGS (hidden from the standard settings menu) ---
     const hiddenSettings = [
         ['attributeName', String, 'Despair'],
         ['attributeMax', Number, 6],
@@ -472,16 +456,13 @@ export function registerModuleSettings(refreshCallback) {
         ['attributeIcon', String, 'fa-solid fa-skull'],
         ['attributeColor', String, '#e54e4e'],
         ['iconColor', String, '#e54e4e'],
-        // Background Settings
         ['enableCustomBackground', Boolean, false],
         ['customBackgroundColor', String, '#18162e'],
-        // Border Settings
         ['enableCustomBorder', Boolean, false],
         ['customBorderColor', String, '#f3c267'],
-        
-        ['attributeSound', String, 'modules/dh-new-stat-tracker/assets/sfx/fear.mp3'],
+        ['attributeSound', String, `modules/${MODULE_ID}/assets/sfx/fear.mp3`],
         ['attributeVolume', Number, 0.9],
-        ['pipClickSound', String, 'modules/dh-new-stat-tracker/assets/sfx/pipchange.mp3'],
+        ['pipClickSound', String, `modules/${MODULE_ID}/assets/sfx/pipchange.mp3`],
         ['pipClickVolume', Number, 0.8],
         ['attributeVerbose', Boolean, false],
         ['chatImage', String, `modules/${MODULE_ID}/assets/chat-messages/skull.webp`],
@@ -495,13 +476,13 @@ export function registerModuleSettings(refreshCallback) {
         game.settings.register(MODULE_ID, key, {
             scope: 'world',
             config: false,
-            type: type,
+            type,
             default: defaultValue,
             onChange: refreshCallback
         });
     });
 
-    // --- ADVERSARY SETTINGS (Hidden from standard menu) ---
+    // --- ADVERSARY SETTINGS (hidden from the standard settings menu) ---
     const advHiddenSettings = [
         ['advAttributeName', String, 'Tracker'],
         ['advAttributeMax', Number, 6],
@@ -520,7 +501,7 @@ export function registerModuleSettings(refreshCallback) {
         game.settings.register(MODULE_ID, key, {
             scope: 'world',
             config: false,
-            type: type,
+            type,
             default: defaultValue,
             onChange: refreshCallback
         });
@@ -528,7 +509,7 @@ export function registerModuleSettings(refreshCallback) {
 
     AdversaryTrackerSettingsApp.onSaveCallback = refreshCallback;
 
-    // --- VISIBLE SETTINGS (Standard menu) ---
+    // --- VISIBLE SETTINGS (shown in the standard settings menu) ---
     game.settings.register(MODULE_ID, 'gmOnly', {
         name: 'GM Only Mode',
         hint: 'If checked, only the GM can modify tracker values directly on the sheet.',
