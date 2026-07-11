@@ -13,10 +13,26 @@
     <section class="tab-content">
         
         <!-- =======================
-             TAB: IDENTITY 
+             TAB: IDENTITY
              ======================= -->
         <div class="tab active" data-tab="identity">
-            
+
+            <div class="config-card">
+                <h3><i class="fas fa-power-off"></i> Activation</h3>
+
+                <div class="form-group custom-toggle-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enabled" {{checked enabled}}>
+                        <span class="slider"></span>
+                        <span class="toggle-label">Enable this Tracker</span>
+                    </label>
+                    <span class="hint">
+                        <strong>OFF:</strong> This tracker is completely disabled and never shown on the character sheet.<br>
+                        <strong>ON:</strong> This tracker is active on the official character sheet.
+                    </span>
+                </div>
+            </div>
+
             <div class="config-card">
                 <h3><i class="fas fa-eye"></i> Visual Identity</h3>
                 

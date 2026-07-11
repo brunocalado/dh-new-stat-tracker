@@ -19,11 +19,29 @@
 
         & .tracker-item {
             display: flex;
-            flex-wrap: nowrap;
-            align-items: center;
+            flex-direction: column;
+            gap: 5px;
             margin-bottom: 5px;
             border-bottom: 1px solid var(--color-border, #333);
             padding-bottom: 5px;
+        }
+
+        /* One row per enabled tracker within an actor's block. */
+        & .tracker-entry {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        & .tracker-entry-name {
+            flex: 1;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--color-text-secondary, #aaa);
         }
 
         & .tracker-actor-info {
@@ -49,6 +67,8 @@
             justify-content: flex-end;
             align-items: center;
             gap: 5px;
+            /* Keep controls right-aligned even when no tracker name is shown (single tracker). */
+            margin-left: auto;
         }
 
         & .tracker-btn {

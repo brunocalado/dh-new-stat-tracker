@@ -2,30 +2,42 @@
     <p class="notes">Manage tracker values for player characters.</p>
     <hr>
     <div class="tracker-list flexcol">
-        {{#each trackers}}
-        <div class="tracker-item flexrow">
+        {{#if hasEnabledTrackers}}
+        {{#each actors}}
+        <div class="tracker-item flexcol">
             <div class="tracker-actor-info">
                 <span class="tracker-actor-name">{{this.actorName}}</span>
                 <span class="tracker-user-name">User: {{this.userName}}</span>
             </div>
-            <div class="tracker-controls flexrow">
-                <button type="button" class="tracker-visibility tracker-btn tracker-visibility--{{this.visibilityMode}}" data-actor-id="{{this.actorId}}" title="{{#if (eq this.visibilityMode 'visible')}}Always Visible to Players{{else if (eq this.visibilityMode 'hidden')}}Always Hidden from Players{{else}}Inherit Global Setting{{/if}}">
-                    <i class="fas {{#if (eq this.visibilityMode 'visible')}}fa-eye{{else if (eq this.visibilityMode 'hidden')}}fa-eye-slash{{else}}fa-link{{/if}}"></i>
-                    <span>{{#if (eq this.visibilityMode 'visible')}}Visible{{else if (eq this.visibilityMode 'hidden')}}Hidden{{else}}Inherit{{/if}}</span>
-                </button>
-                <button type="button" class="tracker-gm-toggle tracker-btn {{#if this.gmHidden}}tracker-gm-toggle--hidden{{else}}tracker-gm-toggle--visible{{/if}}" data-actor-id="{{this.actorId}}" title="{{#if this.gmHidden}}Hidden from GM view (click to show){{else}}Visible to GM (click to hide){{/if}}">
-                    <i class="fas {{#if this.gmHidden}}fa-user-slash{{else}}fa-user{{/if}}"></i>
-                    <span>{{#if this.gmHidden}}GM Off{{else}}GM On{{/if}}</span>
-                </button>
-                <button type="button" class="tracker-config tracker-btn" data-actor-id="{{this.actorId}}" title="Configure Max Value"><i class="fas fa-cog"></i></button>
-                <button type="button" class="tracker-adjust tracker-btn" data-actor-id="{{this.actorId}}" data-action="decrease"><i class="fas fa-minus"></i></button>
-                <span class="tracker-value">{{this.value}} / {{this.max}}</span>
-                <button type="button" class="tracker-adjust tracker-btn" data-actor-id="{{this.actorId}}" data-action="increase"><i class="fas fa-plus"></i></button>
+            {{#each this.entries}}
+            <div class="tracker-entry flexrow">
+                {{#if ../../multipleTrackers}}
+                <span class="tracker-entry-name">{{this.name}}</span>
+                {{/if}}
+                <div class="tracker-controls flexrow">
+                    <button type="button" class="tracker-visibility tracker-btn tracker-visibility--{{this.visibilityMode}}" data-actor-id="{{../actorId}}" data-tracker-index="{{this.index}}" title="{{#if (eq this.visibilityMode 'visible')}}Always Visible to Players{{else if (eq this.visibilityMode 'hidden')}}Always Hidden from Players{{else}}Inherit Global Setting{{/if}}">
+                        <i class="fas {{#if (eq this.visibilityMode 'visible')}}fa-eye{{else if (eq this.visibilityMode 'hidden')}}fa-eye-slash{{else}}fa-link{{/if}}"></i>
+                        <span>{{#if (eq this.visibilityMode 'visible')}}Visible{{else if (eq this.visibilityMode 'hidden')}}Hidden{{else}}Inherit{{/if}}</span>
+                    </button>
+                    <button type="button" class="tracker-gm-toggle tracker-btn {{#if this.gmHidden}}tracker-gm-toggle--hidden{{else}}tracker-gm-toggle--visible{{/if}}" data-actor-id="{{../actorId}}" data-tracker-index="{{this.index}}" title="{{#if this.gmHidden}}Hidden from GM view (click to show){{else}}Visible to GM (click to hide){{/if}}">
+                        <i class="fas {{#if this.gmHidden}}fa-user-slash{{else}}fa-user{{/if}}"></i>
+                        <span>{{#if this.gmHidden}}GM Off{{else}}GM On{{/if}}</span>
+                    </button>
+                    <button type="button" class="tracker-config tracker-btn" data-actor-id="{{../actorId}}" data-tracker-index="{{this.index}}" title="Configure Max Value"><i class="fas fa-cog"></i></button>
+                    <button type="button" class="tracker-adjust tracker-btn" data-actor-id="{{../actorId}}" data-tracker-index="{{this.index}}" data-action="decrease"><i class="fas fa-minus"></i></button>
+                    <span class="tracker-value">{{this.value}} / {{this.max}}</span>
+                    <button type="button" class="tracker-adjust tracker-btn" data-actor-id="{{../actorId}}" data-tracker-index="{{this.index}}" data-action="increase"><i class="fas fa-plus"></i></button>
+                </div>
             </div>
+            {{/each}}
         </div>
         {{else}}
         <p>No linked characters found!</p>
         <p>How To: Right-click the player in the Player List, select User Configuration, and assign an Actor from the Character dropdown menu (ensure the user has Owner permissions for that Actor first).</p>
         {{/each}}
+        {{else}}
+        <p>No trackers are enabled.</p>
+        <p>Enable at least one tracker from <strong>Tracker 1 Configuration</strong> or <strong>Tracker 2 Configuration</strong> in the module settings.</p>
+        {{/if}}
     </div>
 </div>

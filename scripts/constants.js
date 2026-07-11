@@ -19,6 +19,83 @@ export const MAX_POSSIBLE_VALUE = 15;
 export const ADV_MAX_POSSIBLE_VALUE = 9;
 
 /**
+ * Per-tracker world settings, expressed as logical field names.
+ * Each entry is `[field, type, default]`. The same field list is registered once
+ * per character tracker, mapped to that tracker's concrete setting keys (see
+ * {@link CHARACTER_TRACKERS}). Path-based defaults are built from {@link MODULE_ID}.
+ * The `enabled` default here is a placeholder — each tracker overrides it via its
+ * own `defaults` map.
+ */
+export const TRACKER_SETTING_FIELDS = [
+    ['enabled', Boolean, true],
+    ['attributeName', String, 'Despair'],
+    ['attributeMax', Number, 6],
+    ['attributeInverted', Boolean, false],
+    ['attributeIcon', String, 'fa-solid fa-skull'],
+    ['attributeColor', String, '#e54e4e'],
+    ['iconColor', String, '#e54e4e'],
+    ['enableCustomBackground', Boolean, false],
+    ['customBackgroundColor', String, '#18162e'],
+    ['enableCustomBorder', Boolean, false],
+    ['customBorderColor', String, '#f3c267'],
+    ['attributeSound', String, `modules/${MODULE_ID}/assets/sfx/fear.mp3`],
+    ['attributeVolume', Number, 0.9],
+    ['pipClickSound', String, `modules/${MODULE_ID}/assets/sfx/pipchange.mp3`],
+    ['pipClickVolume', Number, 0.8],
+    ['attributeVerbose', Boolean, false],
+    ['chatImage', String, `modules/${MODULE_ID}/assets/chat-messages/skull.webp`],
+    ['textMax', String, 'MAXIMUM REACHED'],
+    ['textDepleted', String, 'DEPLETED'],
+    ['trackerRules', String, '[]'],
+    ['hideFromPlayers', Boolean, false]
+];
+
+/**
+ * Builds the concrete setting-key map for a tracker from a prefix.
+ * Tracker 1 uses an empty prefix so its keys match the legacy names (backwards
+ * compatible with existing worlds); tracker 2 uses a `t2` prefix.
+ * @param {string} prefix - Camel-case prefix, or '' for the legacy tracker.
+ * @returns {Object<string, string>} Map of logical field name → concrete setting key.
+ */
+function _buildTrackerKeys(prefix) {
+    return Object.fromEntries(TRACKER_SETTING_FIELDS.map(([field]) => {
+        const key = prefix ? prefix + field.charAt(0).toUpperCase() + field.slice(1) : field;
+        return [field, key];
+    }));
+}
+
+/**
+ * The character trackers supported on the official character sheet (up to two).
+ * Each definition carries the actor-flag keys (value, per-actor max modifier, and
+ * per-tracker visibility) plus the concrete world-setting key map. Tracker 1 keeps
+ * the original un-prefixed keys and is enabled by default; tracker 2 is prefixed
+ * and disabled by default.
+ * @type {ReadonlyArray<object>}
+ */
+export const CHARACTER_TRACKERS = [
+    {
+        index: 1,
+        prefix: '',
+        flagKey: FLAG_KEY,
+        modifierKey: 'maxModifier',
+        visibilityKey: 'visibilityMode',
+        gmHiddenKey: 'gmHidden',
+        keys: _buildTrackerKeys(''),
+        defaults: { enabled: true }
+    },
+    {
+        index: 2,
+        prefix: 't2',
+        flagKey: 'value2',
+        modifierKey: 'maxModifier2',
+        visibilityKey: 'visibilityMode2',
+        gmHiddenKey: 'gmHidden2',
+        keys: _buildTrackerKeys('t2'),
+        defaults: { enabled: false, attributeName: 'Tracker 2' }
+    }
+];
+
+/**
  * All Font Awesome icon classes available for pip customisation.
  * The first entry is an empty string representing the default (skull) icon.
  */

@@ -6,15 +6,19 @@ A configurable custom attribute tracker for character/adversary sheets.
   <img width="700" src="docs/preview.webp">
 </p>
 
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-Donate-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/mestredigital) [![More Modules](https://img.shields.io/badge/Foundry%20VTT-More%20Modules-red?style=for-the-badge&logo=gamepad)](https://mestredigital.online/pages/projetos-en)
+
 # Features
 
-*   **Custom Stat Tracker:** Add a fully configurable resource (like Despair, Sanity, or Corruption) to character sheets.
-*   **Visual Customization:** Choose from over 60 icons, custom colors, and backgrounds.
+*   **Up to Two Custom Stat Trackers:** Add one or two fully configurable resources (like Despair, Sanity, or Corruption) to character sheets. Each tracker is independent and can be enabled or disabled on its own. Tracker 1 is enabled by default; Tracker 2 is disabled by default. When both are enabled, they are stacked one below the other on the sheet.
+*   **Visual Customization:** Choose from over 60 icons, custom colors, and backgrounds — per tracker.
 *   **Immersive Feedback:** Plays sounds and sends chat alerts when values change or reach limits.
-*   **GM Dashboard:** A central menu for GMs to monitor and manage all players' stats.
+*   **GM Dashboard:** A central menu for GMs to monitor and manage all players' stats, with separate controls for each enabled tracker.
 *   **Adversary Support:** Dedicated tracker for Adversaries with independent settings.
 *   **Automation Rules:** Trigger changes to HP, Stress, or other stats based on tracker events.
 *   **Macro Support:** Update tracker values via macro.
+
+> **Note:** Only the official Daggerheart character and adversary sheets are supported.
 
 # How To 
 
@@ -40,6 +44,12 @@ DHStatTracker.updateActor({value: 1}); // Increments the tracker of the selected
 DHStatTracker.updateActor({value: -1});  // Decrements the tracker of the selected token by 1.
 ```
 
+By default the macro targets Tracker 1. Use the optional `tracker` property (`1` or `2`) to target the second tracker.
+
+```js
+DHStatTracker.updateActor({value: 1, tracker: 2}); // Increments Tracker 2 of the selected token by 1.
+```
+
 # Configuration
 
 Navigate to **Settings** → **Configure Settings** → **Module Settings** → **Daggerheart: Custom Stat Tracker**
@@ -47,6 +57,16 @@ Navigate to **Settings** → **Configure Settings** → **Module Settings** → 
 <p align="center">
   <img width="700" src="docs/settings.webp">
 </p>
+
+There you will find three configuration menus:
+
+| Menu | Purpose |
+| :--- | :--- |
+| **Open Tracker 1 Settings** | Configures the first character tracker. Enabled by default. |
+| **Open Tracker 2 Settings** | Configures the optional second character tracker. **Disabled by default** — turn on *Enable this Tracker* in the **Identity** tab to use it. |
+| **Open Adversary Tracker Settings** | Configures the adversary tracker. |
+
+Each character tracker has its own name, icon, colors, maximum value, sounds, chat alerts, visibility, and automation rules. To turn a tracker off completely, open its settings menu and disable the **Enable this Tracker** toggle in the **Identity** tab.
 
 # Manual Installation
 

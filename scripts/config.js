@@ -6,7 +6,7 @@
  * 3. Integrations with System UI (Menu Buttons).
  */
 
-import { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, AVAILABLE_ICONS } from './constants.js';
+import { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, AVAILABLE_ICONS, CHARACTER_TRACKERS, TRACKER_SETTING_FIELDS } from './constants.js';
 
 // Re-export constants so existing importers that pull from config.js keep working.
 export { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, AVAILABLE_ICONS };
@@ -28,20 +28,28 @@ function _getIconChoices() {
 }
 
 /**
- * Menu Application for the character tracker complete settings.
+ * Intermediate base Application for a character tracker's complete settings.
+ * The module supports up to two character trackers, each backed by its own set of
+ * world settings. This class is parameterized by the tracker definition exposed on
+ * the concrete subclass via `static TRACKER`; the leaf subclasses (see below) only
+ * supply their `id`, window title, and tracker definition.
  */
-class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
-    // Static callback to trigger a sheet refresh after saving.
+class CharacterTrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
+    // Static callback to trigger a sheet refresh after saving. Shared by both subclasses.
     static onSaveCallback = null;
 
+    // Tracker definition ({@link CHARACTER_TRACKERS} entry); overridden by each subclass.
+    static TRACKER = null;
+
+    // Keep ApplicationV2 as the merge-chain floor so its built-in DEFAULT_OPTIONS
+    // (window.frame, window.positioned, …) are preserved for the subclasses.
     static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
 
     static DEFAULT_OPTIONS = {
-        id: "tracker-settings-app",
         classes: [MODULE_ID],
         tag: "form",
-        window: { title: "Tracker Configuration", resizable: true },
-        position: { width: 570, height: 600 }
+        window: { resizable: true },
+        position: { width: 570, height: 640 }
     };
 
     static PARTS = {
@@ -49,45 +57,59 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
     };
 
     /**
-     * Builds the Handlebars context from current settings.
+     * The tracker definition this instance edits.
+     * @returns {object} A {@link CHARACTER_TRACKERS} entry.
+     */
+    get tracker() {
+        return this.constructor.TRACKER;
+    }
+
+    /**
+     * Builds the Handlebars context from the current settings of this tracker.
      * Called from ApplicationV2 render lifecycle.
      * @param {object} _options
      * @returns {Promise<object>}
      */
     async _prepareContext(_options) {
+        const keys = this.tracker.keys;
+        const get = (field) => game.settings.get(MODULE_ID, keys[field]);
+
         return {
+            // Activation
+            enabled: get('enabled'),
+
             // Core Settings
-            attributeName: game.settings.get(MODULE_ID, 'attributeName'),
-            attributeMax: game.settings.get(MODULE_ID, 'attributeMax'),
-            attributeInverted: game.settings.get(MODULE_ID, 'attributeInverted'),
-            attributeColor: game.settings.get(MODULE_ID, 'attributeColor'),
-            iconColor: game.settings.get(MODULE_ID, 'iconColor'),
-            attributeIcon: game.settings.get(MODULE_ID, 'attributeIcon'),
+            attributeName: get('attributeName'),
+            attributeMax: get('attributeMax'),
+            attributeInverted: get('attributeInverted'),
+            attributeColor: get('attributeColor'),
+            iconColor: get('iconColor'),
+            attributeIcon: get('attributeIcon'),
 
             // Background Settings
-            enableCustomBackground: game.settings.get(MODULE_ID, 'enableCustomBackground'),
-            customBackgroundColor: game.settings.get(MODULE_ID, 'customBackgroundColor'),
+            enableCustomBackground: get('enableCustomBackground'),
+            customBackgroundColor: get('customBackgroundColor'),
 
             // Border Settings
-            enableCustomBorder: game.settings.get(MODULE_ID, 'enableCustomBorder'),
-            customBorderColor: game.settings.get(MODULE_ID, 'customBorderColor'),
+            enableCustomBorder: get('enableCustomBorder'),
+            customBorderColor: get('customBorderColor'),
 
-            attributeSound: game.settings.get(MODULE_ID, 'attributeSound'),
-            attributeVolume: game.settings.get(MODULE_ID, 'attributeVolume'),
-            pipClickSound: game.settings.get(MODULE_ID, 'pipClickSound'),
-            pipClickVolume: game.settings.get(MODULE_ID, 'pipClickVolume'),
+            attributeSound: get('attributeSound'),
+            attributeVolume: get('attributeVolume'),
+            pipClickSound: get('pipClickSound'),
+            pipClickVolume: get('pipClickVolume'),
 
             // Chat Settings
-            verbose: game.settings.get(MODULE_ID, 'attributeVerbose'),
-            chatImage: game.settings.get(MODULE_ID, 'chatImage'),
-            textMax: game.settings.get(MODULE_ID, 'textMax'),
-            textDepleted: game.settings.get(MODULE_ID, 'textDepleted'),
+            verbose: get('attributeVerbose'),
+            chatImage: get('chatImage'),
+            textMax: get('textMax'),
+            textDepleted: get('textDepleted'),
 
             // Rules
-            trackerRules: JSON.parse(game.settings.get(MODULE_ID, 'trackerRules') || '[]'),
+            trackerRules: JSON.parse(get('trackerRules') || '[]'),
 
             // Visibility
-            hideFromPlayers: game.settings.get(MODULE_ID, 'hideFromPlayers'),
+            hideFromPlayers: get('hideFromPlayers'),
 
             // Helpers
             iconChoices: _getIconChoices(),
@@ -208,28 +230,32 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this.element.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const keys = this.tracker.keys;
+            const set = (field, value) => game.settings.set(MODULE_ID, keys[field], value);
 
-            await game.settings.set(MODULE_ID, 'attributeName', formData.get('attributeName'));
-            await game.settings.set(MODULE_ID, 'attributeMax', parseInt(formData.get('attributeMax')));
-            await game.settings.set(MODULE_ID, 'attributeInverted', formData.get('attributeInverted') === 'on');
-            await game.settings.set(MODULE_ID, 'attributeColor', formData.get('attributeColor'));
-            await game.settings.set(MODULE_ID, 'iconColor', formData.get('iconColor'));
-            await game.settings.set(MODULE_ID, 'attributeIcon', formData.get('attributeIcon'));
+            await set('enabled', formData.get('enabled') === 'on');
 
-            await game.settings.set(MODULE_ID, 'enableCustomBackground', formData.get('enableCustomBackground') === 'on');
-            await game.settings.set(MODULE_ID, 'customBackgroundColor', formData.get('customBackgroundColor'));
-            await game.settings.set(MODULE_ID, 'enableCustomBorder', formData.get('enableCustomBorder') === 'on');
-            await game.settings.set(MODULE_ID, 'customBorderColor', formData.get('customBorderColor'));
+            await set('attributeName', formData.get('attributeName'));
+            await set('attributeMax', parseInt(formData.get('attributeMax')));
+            await set('attributeInverted', formData.get('attributeInverted') === 'on');
+            await set('attributeColor', formData.get('attributeColor'));
+            await set('iconColor', formData.get('iconColor'));
+            await set('attributeIcon', formData.get('attributeIcon'));
 
-            await game.settings.set(MODULE_ID, 'attributeSound', formData.get('attributeSound'));
-            await game.settings.set(MODULE_ID, 'attributeVolume', parseFloat(formData.get('attributeVolume')));
-            await game.settings.set(MODULE_ID, 'pipClickSound', formData.get('pipClickSound'));
-            await game.settings.set(MODULE_ID, 'pipClickVolume', parseFloat(formData.get('pipClickVolume')));
+            await set('enableCustomBackground', formData.get('enableCustomBackground') === 'on');
+            await set('customBackgroundColor', formData.get('customBackgroundColor'));
+            await set('enableCustomBorder', formData.get('enableCustomBorder') === 'on');
+            await set('customBorderColor', formData.get('customBorderColor'));
 
-            await game.settings.set(MODULE_ID, 'attributeVerbose', formData.get('verbose') === 'on');
-            await game.settings.set(MODULE_ID, 'chatImage', formData.get('chatImage'));
-            await game.settings.set(MODULE_ID, 'textMax', formData.get('textMax'));
-            await game.settings.set(MODULE_ID, 'textDepleted', formData.get('textDepleted'));
+            await set('attributeSound', formData.get('attributeSound'));
+            await set('attributeVolume', parseFloat(formData.get('attributeVolume')));
+            await set('pipClickSound', formData.get('pipClickSound'));
+            await set('pipClickVolume', parseFloat(formData.get('pipClickVolume')));
+
+            await set('attributeVerbose', formData.get('verbose') === 'on');
+            await set('chatImage', formData.get('chatImage'));
+            await set('textMax', formData.get('textMax'));
+            await set('textDepleted', formData.get('textDepleted'));
 
             // Collect rules from dynamically generated rows
             const ruleRows = this.element.querySelectorAll('.rule-row');
@@ -239,14 +265,38 @@ class TrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
                 target: row.querySelector('.rule-target').value,
                 action: row.querySelector('.rule-action').value
             }));
-            await game.settings.set(MODULE_ID, 'trackerRules', JSON.stringify(rules));
+            await set('trackerRules', JSON.stringify(rules));
 
-            await game.settings.set(MODULE_ID, 'hideFromPlayers', formData.get('hideFromPlayers') === 'on');
+            await set('hideFromPlayers', formData.get('hideFromPlayers') === 'on');
 
             this.close();
-            if (TrackerSettingsApp.onSaveCallback) TrackerSettingsApp.onSaveCallback();
+            if (CharacterTrackerSettingsApp.onSaveCallback) CharacterTrackerSettingsApp.onSaveCallback();
         });
     }
+}
+
+/**
+ * Leaf settings Application for character tracker 1 (legacy keys, enabled by default).
+ */
+class Tracker1SettingsApp extends CharacterTrackerSettingsApp {
+    static TRACKER = CHARACTER_TRACKERS[0];
+
+    static DEFAULT_OPTIONS = {
+        id: "tracker-settings-app",
+        window: { title: "Tracker 1 Configuration" }
+    };
+}
+
+/**
+ * Leaf settings Application for character tracker 2 (t2-prefixed keys, disabled by default).
+ */
+class Tracker2SettingsApp extends CharacterTrackerSettingsApp {
+    static TRACKER = CHARACTER_TRACKERS[1];
+
+    static DEFAULT_OPTIONS = {
+        id: "tracker-2-settings-app",
+        window: { title: "Tracker 2 Configuration" }
+    };
 }
 
 /**
@@ -446,41 +496,23 @@ export function registerDaggerheartMenuButton() {
  * @param {Function} refreshCallback - Called whenever a visual setting changes so all open sheets re-render.
  */
 export function registerModuleSettings(refreshCallback) {
-    TrackerSettingsApp.onSaveCallback = refreshCallback;
+    CharacterTrackerSettingsApp.onSaveCallback = refreshCallback;
 
-    // --- CORE SETTINGS (hidden from the standard settings menu) ---
-    const hiddenSettings = [
-        ['attributeName', String, 'Despair'],
-        ['attributeMax', Number, 6],
-        ['attributeInverted', Boolean, false],
-        ['attributeIcon', String, 'fa-solid fa-skull'],
-        ['attributeColor', String, '#e54e4e'],
-        ['iconColor', String, '#e54e4e'],
-        ['enableCustomBackground', Boolean, false],
-        ['customBackgroundColor', String, '#18162e'],
-        ['enableCustomBorder', Boolean, false],
-        ['customBorderColor', String, '#f3c267'],
-        ['attributeSound', String, `modules/${MODULE_ID}/assets/sfx/fear.mp3`],
-        ['attributeVolume', Number, 0.9],
-        ['pipClickSound', String, `modules/${MODULE_ID}/assets/sfx/pipchange.mp3`],
-        ['pipClickVolume', Number, 0.8],
-        ['attributeVerbose', Boolean, false],
-        ['chatImage', String, `modules/${MODULE_ID}/assets/chat-messages/skull.webp`],
-        ['textMax', String, 'MAXIMUM REACHED'],
-        ['textDepleted', String, 'DEPLETED'],
-        ['trackerRules', String, '[]'],
-        ['hideFromPlayers', Boolean, false]
-    ];
-
-    hiddenSettings.forEach(([key, type, defaultValue]) => {
-        game.settings.register(MODULE_ID, key, {
-            scope: 'world',
-            config: false,
-            type,
-            default: defaultValue,
-            onChange: refreshCallback
-        });
-    });
+    // --- CHARACTER TRACKER SETTINGS (hidden from the standard settings menu) ---
+    // The same field list is registered once per tracker, mapped to that tracker's
+    // concrete keys. Tracker 2 overrides a few defaults (notably `enabled: false`).
+    for (const tracker of CHARACTER_TRACKERS) {
+        for (const [field, type, defaultValue] of TRACKER_SETTING_FIELDS) {
+            const value = field in tracker.defaults ? tracker.defaults[field] : defaultValue;
+            game.settings.register(MODULE_ID, tracker.keys[field], {
+                scope: 'world',
+                config: false,
+                type,
+                default: value,
+                onChange: refreshCallback
+            });
+        }
+    }
 
     // --- ADVERSARY SETTINGS (hidden from the standard settings menu) ---
     const advHiddenSettings = [
@@ -532,11 +564,20 @@ export function registerModuleSettings(refreshCallback) {
 
     // --- MENU BUTTONS ---
     game.settings.registerMenu(MODULE_ID, 'trackerSettingsMenu', {
-        name: 'Configuration',
-        label: 'Open Tracker Settings',
-        hint: 'Configure attributes, visuals, sounds, and chat notifications.',
+        name: 'Tracker 1 Configuration',
+        label: 'Open Tracker 1 Settings',
+        hint: 'Configure the first character tracker: activation, attributes, visuals, sounds, and chat notifications.',
         icon: 'fas fa-cogs',
-        type: TrackerSettingsApp,
+        type: Tracker1SettingsApp,
+        restricted: true
+    });
+
+    game.settings.registerMenu(MODULE_ID, 'tracker2SettingsMenu', {
+        name: 'Tracker 2 Configuration',
+        label: 'Open Tracker 2 Settings',
+        hint: 'Configure the optional second character tracker (disabled by default).',
+        icon: 'fas fa-cogs',
+        type: Tracker2SettingsApp,
         restricted: true
     });
 

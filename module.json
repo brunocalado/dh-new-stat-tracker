@@ -3,7 +3,7 @@
   "title": "Daggerheart: Custom Stat Tracker",
   "description": "A configurable custom attribute tracker for actor sheets.",
   
-  "version": "0.1.0",
+  "version": "0.1.1",
 
   "compatibility": {
     "minimum": "14",

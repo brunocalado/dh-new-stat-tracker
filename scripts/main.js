@@ -7,13 +7,32 @@
  * 4. Operational Applications (Status and Config per Actor).
  */
 
-import { MODULE_ID, FLAG_KEY, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE } from './constants.js';
+import { MODULE_ID, ADV_FLAG_KEY, MAX_POSSIBLE_VALUE, ADV_MAX_POSSIBLE_VALUE, CHARACTER_TRACKERS } from './constants.js';
 import { registerModuleSettings, registerDaggerheartMenuButton } from './config.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
-// Tracks the previous pip value per actor for rule evaluation
+// Tracks the previous pip value per actor+tracker for rule evaluation
 const _previousValues = new Map();
+
+/**
+ * Resolves a character tracker definition by its 1-based index.
+ * @param {number} index
+ * @returns {object|undefined} The matching {@link CHARACTER_TRACKERS} entry.
+ */
+function _getTrackerByIndex(index) {
+    return CHARACTER_TRACKERS.find(t => t.index === Number(index));
+}
+
+/**
+ * Builds the `_previousValues` map key for an actor + character tracker.
+ * @param {string} actorId
+ * @param {object} tracker - A {@link CHARACTER_TRACKERS} entry.
+ * @returns {string}
+ */
+function _prevKey(actorId, tracker) {
+    return `${actorId}_t${tracker.index}`;
+}
 
 /* -------------------------------------------- */
 /* Initialization                               */
@@ -28,33 +47,41 @@ Hooks.once('init', () => {
 /* Runtime Helpers                              */
 /* -------------------------------------------- */
 
-function _getSettings() {
-    const rawName = game.settings.get(MODULE_ID, 'attributeName') || 'Despair';
-    
+/**
+ * Reads the resolved (clamped/defaulted) runtime settings for a character tracker.
+ * @param {object} tracker - A {@link CHARACTER_TRACKERS} entry.
+ * @returns {object} Runtime settings for the tracker.
+ */
+function _getSettings(tracker) {
+    const keys = tracker.keys;
+    const get = (field) => game.settings.get(MODULE_ID, keys[field]);
+    const rawName = get('attributeName') || 'Despair';
+
     return {
-        name: rawName.substring(0, 14), 
-        max: Math.max(1, Math.min(MAX_POSSIBLE_VALUE, game.settings.get(MODULE_ID, 'attributeMax') || 6)),
-        inverted: game.settings.get(MODULE_ID, 'attributeInverted') || false,
+        enabled: get('enabled'),
+        name: rawName.substring(0, 14),
+        max: Math.max(1, Math.min(MAX_POSSIBLE_VALUE, get('attributeMax') || 6)),
+        inverted: get('attributeInverted') || false,
         gmOnly: game.settings.get(MODULE_ID, 'gmOnly') || false,
-        icon: game.settings.get(MODULE_ID, 'attributeIcon') || 'fa-solid fa-skull',
-        color: game.settings.get(MODULE_ID, 'attributeColor') || '#e54e4e',
-        iconColor: game.settings.get(MODULE_ID, 'iconColor') || '#e54e4e',
+        icon: get('attributeIcon') || 'fa-solid fa-skull',
+        color: get('attributeColor') || '#e54e4e',
+        iconColor: get('iconColor') || '#e54e4e',
         // Background Logic
-        enableCustomBackground: game.settings.get(MODULE_ID, 'enableCustomBackground') || false,
-        customBackgroundColor: game.settings.get(MODULE_ID, 'customBackgroundColor') || '#18162e',
+        enableCustomBackground: get('enableCustomBackground') || false,
+        customBackgroundColor: get('customBackgroundColor') || '#18162e',
         // Border Logic
-        enableCustomBorder: game.settings.get(MODULE_ID, 'enableCustomBorder') || false,
-        customBorderColor: game.settings.get(MODULE_ID, 'customBorderColor') || '#f3c267',
-        
-        verbose: game.settings.get(MODULE_ID, 'attributeVerbose') || false,
-        sound: game.settings.get(MODULE_ID, 'attributeSound') || '',
-        volume: game.settings.get(MODULE_ID, 'attributeVolume') ?? 0.9,
-        pipClickSound: game.settings.get(MODULE_ID, 'pipClickSound') || '',
-        pipClickVolume: game.settings.get(MODULE_ID, 'pipClickVolume') ?? 0.8,
-        chatImage: game.settings.get(MODULE_ID, 'chatImage'),
-        textMax: game.settings.get(MODULE_ID, 'textMax') || 'MAXIMUM REACHED',
-        textDepleted: game.settings.get(MODULE_ID, 'textDepleted') || 'DEPLETED',
-        hideFromPlayers: game.settings.get(MODULE_ID, 'hideFromPlayers') || false
+        enableCustomBorder: get('enableCustomBorder') || false,
+        customBorderColor: get('customBorderColor') || '#f3c267',
+
+        verbose: get('attributeVerbose') || false,
+        sound: get('attributeSound') || '',
+        volume: get('attributeVolume') ?? 0.9,
+        pipClickSound: get('pipClickSound') || '',
+        pipClickVolume: get('pipClickVolume') ?? 0.8,
+        chatImage: get('chatImage'),
+        textMax: get('textMax') || 'MAXIMUM REACHED',
+        textDepleted: get('textDepleted') || 'DEPLETED',
+        hideFromPlayers: get('hideFromPlayers') || false
     };
 }
 
@@ -100,9 +127,9 @@ const ADV_RULE_TARGET_MAP = {
     severeThreshold:{ key: 'system.damageThresholds.severe',        name: 'DHStatTracker: Severe Threshold' }
 };
 
-function _getRules() {
+function _getRules(tracker) {
     try {
-        return JSON.parse(game.settings.get(MODULE_ID, 'trackerRules') || '[]');
+        return JSON.parse(game.settings.get(MODULE_ID, tracker.keys.trackerRules) || '[]');
     } catch { return []; }
 }
 
@@ -240,8 +267,8 @@ async function _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, r
     }
 }
 
-async function _evaluateRules(actor, oldValue, newValue, effectiveMax) {
-    return _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, _getRules(), RULE_TARGET_MAP);
+async function _evaluateRules(actor, oldValue, newValue, effectiveMax, tracker) {
+    return _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, _getRules(tracker), RULE_TARGET_MAP);
 }
 
 async function _evaluateAdvRules(actor, oldValue, newValue, effectiveMax) {
@@ -249,20 +276,23 @@ async function _evaluateAdvRules(actor, oldValue, newValue, effectiveMax) {
 }
 
 async function _refreshAllSheets() {
-    const settings = _getSettings();
-
-    // Data Consistency: Clamp values if Max was reduced (GM Only)
+    // Data Consistency: Clamp each enabled tracker's value if its Max was reduced (GM Only)
     if (game.user.isGM) {
         const linkedActors = new Set(game.users.map(u => u.character).filter(a => a));
 
         for (const actor of linkedActors) {
             if (actor.type !== 'character') continue;
 
-            const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
-            const effectiveMax = _getActorMax(actor, settings.max);
+            for (const tracker of CHARACTER_TRACKERS) {
+                if (!game.settings.get(MODULE_ID, tracker.keys.enabled)) continue;
 
-            if (current > effectiveMax) {
-                await actor.setFlag(MODULE_ID, FLAG_KEY, effectiveMax);
+                const settings = _getSettings(tracker);
+                const current = actor.getFlag(MODULE_ID, tracker.flagKey) ?? 0;
+                const effectiveMax = _getActorMax(actor, settings.max, tracker.modifierKey);
+
+                if (current > effectiveMax) {
+                    await actor.setFlag(MODULE_ID, tracker.flagKey, effectiveMax);
+                }
             }
         }
     }
@@ -275,19 +305,32 @@ async function _refreshAllSheets() {
     });
 }
 
-function _getActorMax(actor, globalMax) {
-    const modifier = actor.getFlag(MODULE_ID, 'maxModifier') ?? 0;
+/**
+ * Resolves an actor's effective max for a tracker, applying its per-actor modifier flag.
+ * @param {Actor} actor
+ * @param {number} globalMax - The tracker's global maximum.
+ * @param {string} [modifierKey='maxModifier'] - The actor flag holding the per-actor modifier.
+ * @returns {number}
+ */
+function _getActorMax(actor, globalMax, modifierKey = 'maxModifier') {
+    const modifier = actor.getFlag(MODULE_ID, modifierKey) ?? 0;
     return Math.max(1, globalMax + modifier);
 }
 
-function _isTrackerVisibleForUser(actor) {
-    const mode = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
-    // GM visibility is controlled independently via the gmHidden flag so the GM can
-    // hide individual trackers from their own view without affecting player visibility.
-    if (game.user.isGM) return !actor.getFlag(MODULE_ID, 'gmHidden');
+/**
+ * Determines whether a specific tracker should be visible to the current user on an actor.
+ * @param {Actor} actor
+ * @param {object} tracker - A {@link CHARACTER_TRACKERS} entry.
+ * @returns {boolean}
+ */
+function _isTrackerVisibleForUser(actor, tracker) {
+    const mode = actor.getFlag(MODULE_ID, tracker.visibilityKey) ?? 'inherit';
+    // GM visibility is controlled independently via the per-tracker gmHidden flag so the GM
+    // can hide individual trackers from their own view without affecting player visibility.
+    if (game.user.isGM) return !actor.getFlag(MODULE_ID, tracker.gmHiddenKey);
     if (mode === 'visible') return true;
     if (mode === 'hidden') return false;
-    return !game.settings.get(MODULE_ID, 'hideFromPlayers');
+    return !game.settings.get(MODULE_ID, tracker.keys.hideFromPlayers);
 }
 
 /* -------------------------------------------- */
@@ -296,11 +339,13 @@ function _isTrackerVisibleForUser(actor) {
 
 Hooks.on('preCreateActor', (actor, _data, _options, _userId) => {
     if (actor.type === 'character') {
-        const settings = _getSettings();
-        const initialValue = settings.inverted ? settings.max : 0;
-        actor.updateSource({
-            [`flags.${MODULE_ID}.${FLAG_KEY}`]: initialValue
-        });
+        // Seed every character tracker's value flag so new actors start consistently.
+        const updates = {};
+        for (const tracker of CHARACTER_TRACKERS) {
+            const settings = _getSettings(tracker);
+            updates[`flags.${MODULE_ID}.${tracker.flagKey}`] = settings.inverted ? settings.max : 0;
+        }
+        actor.updateSource(updates);
     } else if (actor.type === 'adversary') {
         const advSettings = _getAdvSettings();
         const initialValue = advSettings.inverted ? advSettings.max : 0;
@@ -310,25 +355,11 @@ Hooks.on('preCreateActor', (actor, _data, _options, _userId) => {
     }
 });
 
-const renderHook = (app, _html) => {
+// Official character sheet only. Per-tracker enable/visibility is resolved during injection.
+Hooks.on('renderCharacterSheet', (app, _html) => {
     const actor = app.document;
     if (!actor || actor.type !== 'character') return;
-    if (!_isTrackerVisibleForUser(actor)) return;
-    requestAnimationFrame(() => _injectAttribute(app.element, actor));
-};
-
-Hooks.on('renderCharacterSheet', renderHook);
-// DaggerheartPlus Module Support: Hook to render the tracker on the DH+ character sheet
-Hooks.on('renderDaggerheartPlusCharacterSheet', renderHook);
-Hooks.on('renderActorSheet', (app, _html) => {
-    const actor = app.document;
-    if (!actor || actor.type !== 'character') return;
-    // Normalize: v1 Application passes a jQuery wrapper, ApplicationV2 passes HTMLElement.
-    const el = (app.element instanceof HTMLElement) ? app.element : app.element?.[0];
-    if (!el) return;
-    if (!el.querySelector('.character-row') && !el.querySelector('.core-stats')) return;
-    if (!_isTrackerVisibleForUser(actor)) return;
-    requestAnimationFrame(() => _injectAttribute(el, actor));
+    requestAnimationFrame(() => _injectCharacterTrackers(app.element, actor));
 });
 
 // Adversary Sheet Support (ApplicationV2 — fires renderAdversarySheet, not renderActorSheet)
@@ -340,55 +371,57 @@ Hooks.on('renderAdversarySheet', (app, _html) => {
     requestAnimationFrame(() => _injectAdversaryAttribute(app.element, actor));
 });
 
-// Sleek UI Module Support
-Hooks.on('renderSleekCharacterSheet', (app, _html) => {
-    const actor = app.document;
-    if (!actor || actor.type !== 'character') return;
-    if (!_isTrackerVisibleForUser(actor)) return;
-    requestAnimationFrame(() => _injectAttributeSleekUI(app.element, actor));
-});
-
 /* -------------------------------------------- */
 /* DOM Injection Logic                          */
 /* -------------------------------------------- */
 
-function _injectAttribute(form, actor) {
+/**
+ * Injects every enabled character tracker into the official character sheet, stacked
+ * vertically inside a single wrapper placed right after the `.character-row`.
+ * @param {HTMLElement} form - The rendered sheet element.
+ * @param {Actor} actor
+ */
+function _injectCharacterTrackers(form, actor) {
     if (!form || !actor) return;
 
-    const settings = _getSettings();
-    const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
-    const effectiveMax = _getActorMax(actor, settings.max);
-
-    let targetContainer = null;
-    let insertionPoint = null;
-    let layoutType = 'standard';
-    let insertMethod = 'append';
-
-    // 1. Try Standard Sheet
     const characterRow = form.querySelector('.character-row');
-    if (characterRow) {
-        targetContainer = characterRow.parentElement; 
-        layoutType = 'standard';
-        insertionPoint = characterRow;
-        insertMethod = 'after'; 
-    } 
-    // 2. Try DH+ Sheet
-    // DaggerheartPlus Module Support: Detects the specific header structure of the DH+ sheet to inject the tracker
-    else {
-        const headerMain = form.querySelector('.header-main-section');
-        if (headerMain) {
-            targetContainer = headerMain.parentElement;
-            layoutType = 'dhplus';
-            insertionPoint = headerMain;
-            insertMethod = 'after';
-        }
+    if (!characterRow) return;
+
+    // A single wrapper holds all stacked tracker sections so their order stays deterministic.
+    let wrapper = characterRow.parentElement.querySelector('.dh-new-stat-tracker-wrapper');
+    if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.classList.add('dh-new-stat-tracker-wrapper');
+        characterRow.insertAdjacentElement('afterend', wrapper);
     }
 
-    if (!targetContainer) return;
+    for (const tracker of CHARACTER_TRACKERS) {
+        _injectTrackerSection(wrapper, actor, tracker);
+    }
+}
 
-    const existingSection = targetContainer.querySelector(`.dh-new-stat-tracker-section`);
+/**
+ * Injects (or updates/removes) a single tracker's section inside the stack wrapper.
+ * Sections are keyed by `data-tracker-index` so each tracker updates independently.
+ * @param {HTMLElement} wrapper - The `.dh-new-stat-tracker-wrapper` container.
+ * @param {Actor} actor
+ * @param {object} tracker - A {@link CHARACTER_TRACKERS} entry.
+ */
+function _injectTrackerSection(wrapper, actor, tracker) {
+    const existingSection = wrapper.querySelector(`.dh-new-stat-tracker-section[data-tracker-index="${tracker.index}"]`);
 
-    // Force Rebuild check (render optimization)
+    // Remove the section when the tracker is disabled or hidden for this user.
+    const enabled = game.settings.get(MODULE_ID, tracker.keys.enabled);
+    if (!enabled || !_isTrackerVisibleForUser(actor, tracker)) {
+        if (existingSection) existingSection.remove();
+        return;
+    }
+
+    const settings = _getSettings(tracker);
+    const current = actor.getFlag(MODULE_ID, tracker.flagKey) ?? 0;
+    const effectiveMax = _getActorMax(actor, settings.max, tracker.modifierKey);
+
+    // Force Rebuild check (render optimization): if nothing structural changed, only repaint pips.
     if (existingSection) {
         const renderedMax = parseInt(existingSection.dataset.max || 0);
         const renderedName = existingSection.dataset.name || '';
@@ -402,7 +435,6 @@ function _injectAttribute(form, actor) {
         const renderedEnableCustomBorder = existingSection.dataset.enableCustomBorder === 'true';
         const renderedBorderColor = existingSection.dataset.customBorderColor || '';
 
-        // If nothing changed, only visually update the pips
         if (renderedMax === effectiveMax &&
             renderedName === settings.name &&
             renderedIcon === settings.icon &&
@@ -419,73 +451,18 @@ function _injectAttribute(form, actor) {
         }
     }
 
-    // Full Rebuild
-    const newSection = _buildAttributeSection(current, actor.isOwner, layoutType, settings, effectiveMax);
-    _attachListeners(newSection, actor, effectiveMax);
+    const newSection = _buildAttributeSection(current, actor.isOwner, 'standard', settings, effectiveMax);
+    newSection.dataset.trackerIndex = String(tracker.index);
+    _attachListeners(newSection, actor, effectiveMax, tracker);
 
     if (existingSection && existingSection.isConnected) {
         existingSection.replaceWith(newSection);
     } else {
-        if (insertMethod === 'after' && insertionPoint) {
-            insertionPoint.insertAdjacentElement('afterend', newSection);
-        } else if (insertMethod === 'prepend') {
-            targetContainer.prepend(newSection);
-        } else {
-            targetContainer.appendChild(newSection);
-        }
+        // Insert in ascending tracker order so tracker 1 always sits above tracker 2.
+        const after = [...wrapper.children].find(el => Number(el.dataset.trackerIndex) > tracker.index);
+        if (after) wrapper.insertBefore(newSection, after);
+        else wrapper.appendChild(newSection);
     }
-}
-
-//Sleek UI Injector
-function _injectAttributeSleekUI(form, actor) {
-    if (!form || !actor) return;
-
-    const settings = _getSettings();
-    const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
-    const effectiveMax = _getActorMax(actor, settings.max);
-
-    // Target the .favorites div inside .sidebar-content
-    const favoritesEl = form.querySelector('.sidebar-content .favorites');
-    if (!favoritesEl) return;
-
-    const existingSection = form.querySelector('.dh-new-stat-tracker-section--sleek');
-
-    // Force Rebuild check
-    if (existingSection) {
-        const renderedMax = parseInt(existingSection.dataset.max || 0);
-        const renderedName = existingSection.dataset.name || '';
-        const renderedIcon = existingSection.dataset.icon || '';
-        const renderedColor = existingSection.style.getPropertyValue('--stat-color').trim();
-        const renderedIconColor = existingSection.style.getPropertyValue('--stat-icon-color').trim();
-        const renderedInverted = existingSection.dataset.inverted === 'true';
-        const renderedGmOnly = existingSection.dataset.gmOnly === 'true';
-        const renderedUseThemeBg = existingSection.dataset.enableCustomBackground === 'true';
-        const renderedBgColor = existingSection.dataset.customBgColor || '';
-        const renderedEnableCustomBorder = existingSection.dataset.enableCustomBorder === 'true';
-        const renderedBorderColor = existingSection.dataset.customBorderColor || '';
-
-        if (renderedMax === effectiveMax &&
-            renderedName === settings.name &&
-            renderedIcon === settings.icon &&
-            renderedColor === settings.color &&
-            renderedIconColor === settings.iconColor &&
-            renderedInverted === settings.inverted &&
-            renderedGmOnly === settings.gmOnly &&
-            renderedUseThemeBg === settings.enableCustomBackground &&
-            (!settings.enableCustomBackground || renderedBgColor === settings.customBackgroundColor) &&
-            renderedEnableCustomBorder === settings.enableCustomBorder &&
-            (!settings.enableCustomBorder || renderedBorderColor === settings.customBorderColor)) {
-            _updateVisuals(existingSection, current, effectiveMax, settings.icon, settings.inverted);
-            return;
-        }
-        existingSection.remove();
-    }
-
-    const newSection = _buildAttributeSection(current, actor.isOwner, 'sleek', settings, effectiveMax);
-    _attachListeners(newSection, actor, effectiveMax);
-
-    // Insert before .favorites so it sits between portrait and the equipment list
-    favoritesEl.insertAdjacentElement('beforebegin', newSection);
 }
 
 
@@ -603,49 +580,17 @@ function _buildAttributeSection(current, isOwner, layout, settings, effectiveMax
     contentWrapper.classList.add('dh-tracker-content-wrapper');
 
     // -- Content Logic --
-    // DaggerheartPlus Module Support: Generates a specific layout (Label + Pips) for the DH+ sheet
-    if (layout === 'dhplus') {
-        const labelDiv = document.createElement('div');
-        labelDiv.classList.add('stat-label');
-        labelDiv.textContent = settings.name;
-        contentWrapper.appendChild(labelDiv);
+    // Both the character (standard) and adversary layouts share the same label + pips markup.
+    const label = document.createElement('h4');
+    label.textContent = settings.name;
+    contentWrapper.appendChild(label);
 
-        const pipsDiv = document.createElement('div');
-        pipsDiv.classList.add('attribute-pips');
-        _renderPips(pipsDiv, effectiveMax, current, canInteract, settings.icon);
-        contentWrapper.appendChild(pipsDiv);
-    } else if (layout === 'sleek') {
-        const labelDiv = document.createElement('div');
-        labelDiv.classList.add('stat-label');
-        labelDiv.textContent = settings.name;
-        contentWrapper.appendChild(labelDiv);
-
-        const pipsWrapper = document.createElement('div');
-        pipsWrapper.classList.add('attribute-pips-wrapper');
-
-        const PIPS_PER_ROW = 8;
-        for (let rowStart = 1; rowStart <= effectiveMax; rowStart += PIPS_PER_ROW) {
-            const rowEnd = Math.min(rowStart + PIPS_PER_ROW - 1, effectiveMax);
-            const rowDiv = document.createElement('div');
-            rowDiv.classList.add('attribute-pips');
-            _renderPips(rowDiv, rowEnd, current, canInteract, settings.icon, rowStart);
-            pipsWrapper.appendChild(rowDiv);
-        }
-        contentWrapper.appendChild(pipsWrapper);
-
-    } else {
-        const label = document.createElement('h4');
-        label.textContent = settings.name;
-        contentWrapper.appendChild(label);
-        
-        // Wrapper for pips in standard layout for consistency
-        const pipsContainer = document.createElement('div');
-        pipsContainer.classList.add('attribute-pips');
-        pipsContainer.style.display = 'flex';
-        pipsContainer.style.gap = '4px';
-        _renderPips(pipsContainer, effectiveMax, current, canInteract, settings.icon);
-        contentWrapper.appendChild(pipsContainer);
-    }
+    const pipsContainer = document.createElement('div');
+    pipsContainer.classList.add('attribute-pips');
+    pipsContainer.style.display = 'flex';
+    pipsContainer.style.gap = '4px';
+    _renderPips(pipsContainer, effectiveMax, current, canInteract, settings.icon);
+    contentWrapper.appendChild(pipsContainer);
     
     section.appendChild(contentWrapper);
 
@@ -700,8 +645,15 @@ function _updateMaxClass(section, current, max, inverted) {
     else section.classList.remove('attribute-max');
 }
 
-function _attachListeners(section, actor, maxValue) {
-    const settings = _getSettings();
+/**
+ * Attaches pip click/right-click handlers for a single character tracker's section.
+ * @param {HTMLElement} section
+ * @param {Actor} actor
+ * @param {number} maxValue - The tracker's effective max for this actor.
+ * @param {object} tracker - A {@link CHARACTER_TRACKERS} entry.
+ */
+function _attachListeners(section, actor, maxValue, tracker) {
+    const settings = _getSettings(tracker);
     const canInteract = settings.gmOnly ? game.user.isGM : actor.isOwner;
 
     if (!canInteract) return;
@@ -713,17 +665,17 @@ function _attachListeners(section, actor, maxValue) {
         event.stopPropagation();
 
         const clicked = parseInt(pip.dataset.value);
-        const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
+        const current = actor.getFlag(MODULE_ID, tracker.flagKey) ?? 0;
         const newValue = Math.max(0, Math.min(maxValue, (current === clicked) ? clicked - 1 : clicked));
 
-        const s = _getSettings();
+        const s = _getSettings(tracker);
         const isAlertState = s.inverted ? (newValue === 0) : (newValue >= maxValue);
         if (s.pipClickSound && !isAlertState) {
             foundry.audio.AudioHelper.play({src: s.pipClickSound, volume: s.pipClickVolume, autoplay: true, loop: false}, false);
         }
 
-        _previousValues.set(actor.id, current);
-        await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
+        _previousValues.set(_prevKey(actor.id, tracker), current);
+        await actor.setFlag(MODULE_ID, tracker.flagKey, newValue);
     });
 
     section.addEventListener('contextmenu', async (event) => {
@@ -731,17 +683,17 @@ function _attachListeners(section, actor, maxValue) {
         if (!pip) return;
         event.preventDefault();
         event.stopPropagation();
-        const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
+        const current = actor.getFlag(MODULE_ID, tracker.flagKey) ?? 0;
         const newValue = Math.max(0, current - 1);
 
-        const s = _getSettings();
+        const s = _getSettings(tracker);
         const isAlertState = s.inverted ? (newValue === 0) : (newValue >= maxValue);
         if (s.pipClickSound && !isAlertState) {
             foundry.audio.AudioHelper.play({src: s.pipClickSound, volume: s.pipClickVolume, autoplay: true, loop: false}, false);
         }
 
-        _previousValues.set(actor.id, current);
-        await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
+        _previousValues.set(_prevKey(actor.id, tracker), current);
+        await actor.setFlag(MODULE_ID, tracker.flagKey, newValue);
     });
 }
 
@@ -783,74 +735,67 @@ Hooks.on('updateActor', async (actor, changes, _options, userId) => {
         }
     }
 
-    // --- Character Tracker ---
-    const newValue = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_KEY}`);
-    if (newValue === undefined) return;
+    // --- Character Trackers ---
+    if (actor.type !== 'character') return;
 
-    const settings = _getSettings();
-    const effectiveMax = _getActorMax(actor, settings.max);
+    for (const tracker of CHARACTER_TRACKERS) {
+        const newValue = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${tracker.flagKey}`);
+        if (newValue === undefined) continue;
+        if (!game.settings.get(MODULE_ID, tracker.keys.enabled)) continue;
 
-    // Evaluate rules using the stored previous value
-    const oldValue = _previousValues.get(actor.id) ?? 0;
-    _previousValues.delete(actor.id);
-    if (oldValue !== newValue) {
-        await _evaluateRules(actor, oldValue, newValue, effectiveMax);
-    }
-    let isAlertState = false;
-    let statusText = "";
-    let valueDisplay = String(newValue);
+        const settings = _getSettings(tracker);
+        const effectiveMax = _getActorMax(actor, settings.max, tracker.modifierKey);
 
-    // Determine Alert Logic
-    if (settings.inverted) {
-        isAlertState = (newValue === 0);
-        statusText = settings.textDepleted;
-    } else {
-        isAlertState = (newValue >= effectiveMax);
-        statusText = settings.textMax;
-    }
-
-    // 1. Alert State (Threshold Reached)
-    if (isAlertState) {
-        if (settings.sound) {
-            foundry.audio.AudioHelper.play({src: settings.sound, volume: settings.volume, autoplay: true, loop: false}, false);
+        // Evaluate rules using the stored previous value
+        const prevKey = _prevKey(actor.id, tracker);
+        const oldValue = _previousValues.get(prevKey) ?? 0;
+        _previousValues.delete(prevKey);
+        if (oldValue !== newValue) {
+            await _evaluateRules(actor, oldValue, newValue, effectiveMax, tracker);
         }
 
-        const content = _createCardContent(
-            settings.name.toUpperCase(), 
-            actor.name, 
-            valueDisplay, 
-            statusText, 
-            "#ff0000",
-            settings.chatImage
-        );
+        const valueDisplay = String(newValue);
 
-        ChatMessage.create({
-            content: content,
-            whisper: ChatMessage.getWhisperRecipients('GM')
-        });
+        // Determine Alert Logic
+        let isAlertState;
+        let statusText;
+        if (settings.inverted) {
+            isAlertState = (newValue === 0);
+            statusText = settings.textDepleted;
+        } else {
+            isAlertState = (newValue >= effectiveMax);
+            statusText = settings.textMax;
+        }
 
-        return; // Don't send verbose message if we sent alert
-    }
+        // 1. Alert State (Threshold Reached)
+        if (isAlertState) {
+            if (settings.sound) {
+                foundry.audio.AudioHelper.play({src: settings.sound, volume: settings.volume, autoplay: true, loop: false}, false);
+            }
 
-    // 2. Verbose Mode
-    if (settings.verbose) {
-        const content = _createCardContent(
-            settings.name.toUpperCase(), 
-            actor.name, 
-            valueDisplay, 
-            "UPDATED", 
-            "#00b0ff", 
-            settings.chatImage
-        );
+            ChatMessage.create({
+                content: _createCardContent(settings.name.toUpperCase(), actor.name, valueDisplay, statusText, "#ff0000", settings.chatImage),
+                whisper: ChatMessage.getWhisperRecipients('GM')
+            });
 
-        ChatMessage.create({
-            content: content,
-            whisper: ChatMessage.getWhisperRecipients('GM')
-        });
+            continue; // Don't send verbose message if we sent an alert for this tracker
+        }
+
+        // 2. Verbose Mode
+        if (settings.verbose) {
+            ChatMessage.create({
+                content: _createCardContent(settings.name.toUpperCase(), actor.name, valueDisplay, "UPDATED", "#00b0ff", settings.chatImage),
+                whisper: ChatMessage.getWhisperRecipients('GM')
+            });
+        }
     }
 });
 
-// ... TrackerStatusApp and TrackerConfigApp application classes remain unchanged ...
+/**
+ * GM dashboard listing every linked player character and, for each, one control row
+ * per enabled character tracker. Rows carry `data-tracker-index` so the handlers act
+ * on the right tracker's value, per-actor modifier, and per-tracker visibility flags.
+ */
 class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
     static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
 
@@ -875,29 +820,34 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
     };
 
     async _prepareContext(_options) {
-        const settings = _getSettings();
+        const enabledTrackers = CHARACTER_TRACKERS.filter(t => game.settings.get(MODULE_ID, t.keys.enabled));
         const users = game.users.filter(u => !u.isGM && u.character);
-        
-        const trackers = users.map(u => {
+
+        const actors = users.map(u => {
             const actor = u.character;
-            const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
-            const effectiveMax = _getActorMax(actor, settings.max);
-            const visibilityMode = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
-            const gmHidden = actor.getFlag(MODULE_ID, 'gmHidden') ?? false;
+            const entries = enabledTrackers.map(tracker => {
+                const settings = _getSettings(tracker);
+                return {
+                    index: tracker.index,
+                    name: settings.name,
+                    value: actor.getFlag(MODULE_ID, tracker.flagKey) ?? 0,
+                    max: _getActorMax(actor, settings.max, tracker.modifierKey),
+                    visibilityMode: actor.getFlag(MODULE_ID, tracker.visibilityKey) ?? 'inherit',
+                    gmHidden: actor.getFlag(MODULE_ID, tracker.gmHiddenKey) ?? false
+                };
+            });
             return {
                 actorId: actor.id,
                 actorName: actor.name,
                 userName: u.name,
-                value: current,
-                max: effectiveMax,
-                visibilityMode,
-                gmHidden
+                entries
             };
         });
 
         return {
-            trackers,
-            settings
+            actors,
+            hasEnabledTrackers: enabledTrackers.length > 0,
+            multipleTrackers: enabledTrackers.length > 1
         };
     }
 
@@ -916,18 +866,28 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
         });
     }
 
+    /**
+     * Resolves the actor + tracker definition referenced by a control's dataset.
+     * @param {HTMLElement} btn - The clicked control carrying data-actor-id / data-tracker-index.
+     * @returns {{ actor: Actor, tracker: object }|null}
+     */
+    _resolve(btn) {
+        const actor = game.actors.get(btn.dataset.actorId);
+        const tracker = _getTrackerByIndex(btn.dataset.trackerIndex);
+        if (!actor || !tracker) return null;
+        return { actor, tracker };
+    }
+
     async _onAdjust(event) {
         event.preventDefault();
-        const btn = event.currentTarget;
-        const actorId = btn.dataset.actorId;
-        const action = btn.dataset.action;
-        
-        const actor = game.actors.get(actorId);
-        if (!actor) return;
+        const resolved = this._resolve(event.currentTarget);
+        if (!resolved) return;
+        const { actor, tracker } = resolved;
+        const action = event.currentTarget.dataset.action;
 
-        const settings = _getSettings();
-        const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
-        const effectiveMax = _getActorMax(actor, settings.max);
+        const settings = _getSettings(tracker);
+        const current = actor.getFlag(MODULE_ID, tracker.flagKey) ?? 0;
+        const effectiveMax = _getActorMax(actor, settings.max, tracker.modifierKey);
         let newValue = current;
 
         if (action === 'increase') newValue++;
@@ -936,29 +896,28 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
         // Clamp value
         newValue = Math.max(0, Math.min(effectiveMax, newValue));
 
-        _previousValues.set(actor.id, current);
-        await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
+        _previousValues.set(_prevKey(actor.id, tracker), current);
+        await actor.setFlag(MODULE_ID, tracker.flagKey, newValue);
         this.render();
     }
 
     _onConfig(event) {
         event.preventDefault();
-        const btn = event.currentTarget;
-        const actorId = btn.dataset.actorId;
-        new TrackerConfigApp(actorId).render(true);
+        const resolved = this._resolve(event.currentTarget);
+        if (!resolved) return;
+        new TrackerConfigApp(resolved.actor.id, resolved.tracker.index).render(true);
     }
 
     async _onToggleVisibility(event) {
         event.preventDefault();
-        const btn = event.currentTarget;
-        const actorId = btn.dataset.actorId;
-        const actor = game.actors.get(actorId);
-        if (!actor) return;
+        const resolved = this._resolve(event.currentTarget);
+        if (!resolved) return;
+        const { actor, tracker } = resolved;
 
-        const current = actor.getFlag(MODULE_ID, 'visibilityMode') ?? 'inherit';
+        const current = actor.getFlag(MODULE_ID, tracker.visibilityKey) ?? 'inherit';
         // Cycle player visibility: inherit → visible → hidden → inherit
         const next = current === 'inherit' ? 'visible' : current === 'visible' ? 'hidden' : 'inherit';
-        await actor.setFlag(MODULE_ID, 'visibilityMode', next);
+        await actor.setFlag(MODULE_ID, tracker.visibilityKey, next);
         this.render();
     }
 
@@ -971,21 +930,29 @@ class TrackerStatusApp extends HandlebarsApplicationMixin(ApplicationV2) {
      */
     async _onToggleGmVisibility(event) {
         event.preventDefault();
-        const btn = event.currentTarget;
-        const actorId = btn.dataset.actorId;
-        const actor = game.actors.get(actorId);
-        if (!actor) return;
+        const resolved = this._resolve(event.currentTarget);
+        if (!resolved) return;
+        const { actor, tracker } = resolved;
 
-        const current = actor.getFlag(MODULE_ID, 'gmHidden') ?? false;
-        await actor.setFlag(MODULE_ID, 'gmHidden', !current);
+        const current = actor.getFlag(MODULE_ID, tracker.gmHiddenKey) ?? false;
+        await actor.setFlag(MODULE_ID, tracker.gmHiddenKey, !current);
         this.render();
     }
 }
 
+/**
+ * Per-actor dialog to adjust one tracker's max modifier (effective max = global max + modifier).
+ */
 class TrackerConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
-    constructor(actorId, options={}) {
+    /**
+     * @param {string} actorId - The actor whose modifier is being edited.
+     * @param {number} trackerIndex - Which character tracker (1-based) to configure.
+     * @param {object} [options={}]
+     */
+    constructor(actorId, trackerIndex, options={}) {
         super(options);
         this.actorId = actorId;
+        this.tracker = _getTrackerByIndex(trackerIndex) ?? CHARACTER_TRACKERS[0];
     }
 
     static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
@@ -1012,11 +979,12 @@ class TrackerConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     async _prepareContext(_options) {
         const actor = game.actors.get(this.actorId);
-        const settings = _getSettings();
-        const modifier = actor?.getFlag(MODULE_ID, 'maxModifier') ?? 0;
-        
+        const settings = _getSettings(this.tracker);
+        const modifier = actor?.getFlag(MODULE_ID, this.tracker.modifierKey) ?? 0;
+
         return {
             actorName: actor?.name || "Unknown",
+            trackerName: settings.name,
             globalMax: settings.max,
             modifier: modifier,
             effectiveMax: Math.max(1, settings.max + modifier)
@@ -1033,8 +1001,8 @@ class TrackerConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
         const actor = game.actors.get(this.actorId);
         if (!actor) return;
         const action = event.currentTarget.dataset.action;
-        const settings = _getSettings();
-        let modifier = actor.getFlag(MODULE_ID, 'maxModifier') ?? 0;
+        const settings = _getSettings(this.tracker);
+        let modifier = actor.getFlag(MODULE_ID, this.tracker.modifierKey) ?? 0;
 
         if (action === 'increase') modifier++;
         else if (action === 'decrease') modifier--;
@@ -1043,11 +1011,11 @@ class TrackerConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
         if (newEffectiveMax < 1) return;
         if (action === 'increase' && newEffectiveMax > MAX_POSSIBLE_VALUE) return;
 
-        await actor.setFlag(MODULE_ID, 'maxModifier', modifier);
+        await actor.setFlag(MODULE_ID, this.tracker.modifierKey, modifier);
 
-        const current = actor.getFlag(MODULE_ID, FLAG_KEY) ?? 0;
+        const current = actor.getFlag(MODULE_ID, this.tracker.flagKey) ?? 0;
         if (current > newEffectiveMax) {
-            await actor.setFlag(MODULE_ID, FLAG_KEY, newEffectiveMax);
+            await actor.setFlag(MODULE_ID, this.tracker.flagKey, newEffectiveMax);
         }
 
         this.render();
@@ -1063,15 +1031,29 @@ window.DHStatTracker = {
     },
 
     /**
-     * Updates the tracker value of the currently selected actor.
-     * @param {object} param - Object with a `value` property (number to add/subtract).
-     * @example DHStatTracker.updateActor({value: 1});   // adds 1
-     * @example DHStatTracker.updateActor({value: -1});  // removes 1
+     * Updates a tracker value of the currently selected actor.
+     * @param {object} param - Options.
+     * @param {number} param.value - Integer amount to add (positive) or subtract (negative).
+     * @param {number} [param.tracker=1] - Which character tracker (1 or 2) to modify.
+     * @example DHStatTracker.updateActor({value: 1});             // adds 1 to tracker 1
+     * @example DHStatTracker.updateActor({value: -1});            // removes 1 from tracker 1
+     * @example DHStatTracker.updateActor({value: 1, tracker: 2}); // adds 1 to tracker 2
      */
-    updateActor: async ({ value } = {}) => {
+    updateActor: async ({ value, tracker: trackerIndex = 1 } = {}) => {
         // Validate argument
         if (value === undefined || value === null || typeof value !== 'number' || !Number.isInteger(value)) {
             ui.notifications.error("DHStatTracker.updateActor() requires an object with an integer 'value' property. Example: {value: 1}");
+            return;
+        }
+
+        const tracker = _getTrackerByIndex(trackerIndex);
+        if (!tracker) {
+            ui.notifications.error(`DHStatTracker.updateActor(): unknown tracker "${trackerIndex}". Use 1 or 2.`);
+            return;
+        }
+
+        if (!game.settings.get(MODULE_ID, tracker.keys.enabled)) {
+            ui.notifications.warn(`Tracker ${tracker.index} is disabled.`);
             return;
         }
 
@@ -1089,21 +1071,21 @@ window.DHStatTracker = {
         }
 
         // Check that the actor has the tracker flag
-        const current = actor.getFlag(MODULE_ID, FLAG_KEY);
+        const current = actor.getFlag(MODULE_ID, tracker.flagKey);
         if (current === undefined || current === null) {
             ui.notifications.warn(`Actor "${actor.name}" does not have a tracker flag set.`);
             return;
         }
 
         // Permission check
-        const settings = _getSettings();
+        const settings = _getSettings(tracker);
         const canInteract = settings.gmOnly ? game.user.isGM : actor.isOwner;
         if (!canInteract) {
             ui.notifications.warn("You do not have permission to modify this tracker.");
             return;
         }
 
-        const effectiveMax = _getActorMax(actor, settings.max);
+        const effectiveMax = _getActorMax(actor, settings.max, tracker.modifierKey);
         const newValue = Math.max(0, Math.min(effectiveMax, current + value));
 
         if (newValue === current) {
@@ -1112,8 +1094,8 @@ window.DHStatTracker = {
             return;
         }
 
-        _previousValues.set(actor.id, current);
-        await actor.setFlag(MODULE_ID, FLAG_KEY, newValue);
+        _previousValues.set(_prevKey(actor.id, tracker), current);
+        await actor.setFlag(MODULE_ID, tracker.flagKey, newValue);
     }
 };
 

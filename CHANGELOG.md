@@ -1,3 +1,14 @@
+# 0.1.1
+
+- [Added] Support for a **second character tracker**. Up to two independent trackers can now be shown on a character sheet, stacked one below the other (Tracker 1 on top).
+- [Added] **Enable this Tracker** toggle in each tracker's configuration (Identity tab), allowing any tracker to be fully disabled. Tracker 1 is enabled by default; Tracker 2 is disabled by default.
+- [Added] New **Tracker 2 Configuration** settings menu, with the same options as Tracker 1 (identity, mechanics, audio, chat, and rules). Each tracker keeps its own name, icon, colors, max value, sounds, chat alerts, visibility, and automation rules.
+- [Added] `DHStatTracker.updateActor()` now accepts an optional `tracker` property (`1` or `2`) to choose which tracker to modify. Defaults to Tracker 1.
+- [Changed] **Tracker Status** (Tracker Manager) now lists one control row per enabled tracker for each character. Value, max modifier, player visibility, and GM visibility are managed independently per tracker.
+- [Changed] Player/GM visibility flags and the per-actor max modifier are now stored per tracker.
+- [Removed] Support for unofficial character sheets (DaggerheartPlus and Sleek UI), including the `renderActorSheet` fallback hook and their dedicated layouts/styles. Only the official Daggerheart character and adversary sheets are supported.
+- [Note] Existing worlds are unaffected: Tracker 1 keeps its original settings and actor flags, and remains enabled.
+
 # 0.1.0
 
 - v14 only

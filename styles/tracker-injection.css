@@ -61,6 +61,13 @@
 
     & .character-header-sheet .character-row { margin-bottom: 8px; }
 
+    /* ── STACK WRAPPER ─── */
+    /* Holds up to two trackers, stacked vertically (tracker 1 above tracker 2). */
+    & .dh-new-stat-tracker-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
     /* ── STANDARD LAYOUT ─── */
     & .dh-new-stat-tracker-section--standard {
         width: 100%;
@@ -77,28 +84,6 @@
             color: var(--stat-color);
             margin: 0;
             line-height: 1;
-        }
-    }
-
-    /* ── DAGGERHEART PLUS LAYOUT ─── */
-    /* DaggerheartPlus Module Support: specific layout for the DH+ sheet header */
-    & .dh-new-stat-tracker-section--dhplus {
-        padding: 4px 8px;
-
-        & .attribute-pips {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            flex-wrap: nowrap;
-            justify-content: center;
-        }
-
-        & .stat-label {
-            font-size: var(--font-size-12, 12px);
-            font-weight: bold;
-            text-transform: uppercase;
-            color: var(--stat-color);
-            text-align: center;
         }
     }
 
@@ -140,85 +125,5 @@
         opacity: 0.5;
         min-width: 0;
         border-radius: 2px;
-    }
-}
-
-/* ── SLEEK UI MODULE LAYOUT ─────────────────────────────────── */
-/* Sleek UI Module Support: vertical layout injected into the sidebar */
-.daggerheart.sheet.actor.sleek-ui {
-    & .dh-new-stat-tracker-section--sleek {
-        margin: 4px 12px 0 12px;
-        width: calc(100% - 24px);
-        box-sizing: border-box;
-        padding: 8px;
-        border-radius: var(--border-radius);
-        border: 1px solid var(--color-border);
-        background: var(--gradient-card);
-        position: relative;
-        z-index: 2;
-        font-family: var(--font-primary);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        /* Push .favorites down so it doesn't overlap our tracker */
-        & + .favorites {
-            margin-top: 0;
-            padding-top: 8px;
-        }
-
-        & .dh-filler-line {
-            display: none;
-        }
-
-        & .dh-tracker-content-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        & .stat-label,
-        & h4 {
-            font-size: var(--font-size-xs);
-            font-weight: var(--font-weight-semibold);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--stat-color);
-            margin: 0;
-            border: none;
-        }
-
-        & .attribute-pips {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        /* Empty pips use Sleek UI's border color for visual integration */
-        & .attribute-pip .fa-regular {
-            color: var(--color-border);
-        }
-
-        /* Alert state: glow instead of pulse to match Sleek UI's aesthetic */
-        &.attribute-max {
-            box-shadow: 0 0 9px -1px var(--stat-color);
-            border-color: var(--stat-color);
-        }
-
-        & .attribute-pips-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-
-            & .attribute-pips {
-                display: flex;
-                gap: 4px;
-                flex-wrap: nowrap;
-                justify-content: center;
-            }
-        }
     }
 }
