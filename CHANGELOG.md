@@ -8,6 +8,7 @@
 - [Changed] Player/GM visibility flags and the per-actor max modifier are now stored per tracker.
 - [Removed] Support for unofficial character sheets (DaggerheartPlus and Sleek UI), including the `renderActorSheet` fallback hook and their dedicated layouts/styles. Only the official Daggerheart character and adversary sheets are supported.
 - [Note] Existing worlds are unaffected: Tracker 1 keeps its original settings and actor flags, and remains enabled.
+- https://github.com/brunocalado/dh-new-stat-tracker/issues/1
 
 # 0.1.0
 
