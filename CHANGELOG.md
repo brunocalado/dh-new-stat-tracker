@@ -1,3 +1,8 @@
+# 0.1.2
+
+- [Removed] `assets/chat-messages/skull.webp` (AI-generated image) and its use as the default **Chat Card Background**. The setting now defaults to empty (no background image); users may still pick their own image via the file picker in the Chat tab of the settings menu.
+
+
 # 0.1.1
 
 - [Added] Support for a **second character tracker**. Up to two independent trackers can now be shown on a character sheet, stacked one below the other (Tracker 1 on top).

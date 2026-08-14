@@ -43,7 +43,7 @@ export const TRACKER_SETTING_FIELDS = [
     ['pipClickSound', String, `modules/${MODULE_ID}/assets/sfx/pipchange.mp3`],
     ['pipClickVolume', Number, 0.8],
     ['attributeVerbose', Boolean, false],
-    ['chatImage', String, `modules/${MODULE_ID}/assets/chat-messages/skull.webp`],
+    ['chatImage', String, ''],
     ['textMax', String, 'MAXIMUM REACHED'],
     ['textDepleted', String, 'DEPLETED'],
     ['trackerRules', String, '[]'],

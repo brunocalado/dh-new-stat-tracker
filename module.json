@@ -2,14 +2,12 @@
   "id": "dh-new-stat-tracker",
   "title": "Daggerheart: Custom Stat Tracker",
   "description": "A configurable custom attribute tracker for actor sheets.",
-  
-  "version": "0.1.1",
-
+  "version": "0.1.2",
   "compatibility": {
     "minimum": "14",
-    "verified": "14"
+    "verified": "14",
+    "maximum": "14"
   },
-
   "relationships": {
     "systems": [
       {
@@ -24,23 +22,30 @@
   "authors": [
     {
       "name": "Mestre Digital",
-      "url": "http://youtube.com/@mestredigital",      
+      "url": "http://youtube.com/@mestredigital",
       "flags": {}
     }
   ],
-
   "esmodules": [
     "/scripts/main.js"
   ],
-
   "styles": [
-    "styles/base.css",
-    "styles/tracker-injection.css",
-    "styles/tracker-settings-app.css",
-    "styles/tracker-status-app.css",
-    "styles/chat-card.css"
+    {
+      "src": "styles/base.css"
+    },
+    {
+      "src": "styles/tracker-injection.css"
+    },
+    {
+      "src": "styles/tracker-settings-app.css"
+    },
+    {
+      "src": "styles/tracker-status-app.css"
+    },
+    {
+      "src": "styles/chat-card.css"
+    }
   ],
-  
   "url": "https://github.com/brunocalado/dh-new-stat-tracker",
   "manifest": "https://raw.githubusercontent.com/brunocalado/dh-new-stat-tracker/main/module.json",
   "download": "https://codeload.github.com/brunocalado/dh-new-stat-tracker/zip/main",
