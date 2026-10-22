@@ -1,4 +1,4 @@
-# Unreleased
+# 0.2.0
 
 - [Added] Compatibility with Daggerheart: Nice Sheets: character trackers show in the Nice sheet's sidebar, styled as its resource tracks and colored with each tracker's color.
 - [Fixed] Changing tracker settings (enable, name, colors, max, GM Only Mode, and the rest) now refreshes open character and adversary sheets right away; before, the change only showed after the sheet was re-rendered for another reason.
