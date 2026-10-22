@@ -275,7 +275,9 @@ async function _evaluateAdvRules(actor, oldValue, newValue, effectiveMax) {
     return _evaluateRulesInternal(actor, oldValue, newValue, effectiveMax, _getAdvRules(), ADV_RULE_TARGET_MAP);
 }
 
-async function _refreshAllSheets() {
+// Saving a tracker configuration writes ~20 settings, each firing its onChange; the debounce
+// collapses them into one clamp pass and one render per open sheet.
+const _refreshAllSheets = foundry.utils.debounce(async () => {
     // Data Consistency: Clamp each enabled tracker's value if its Max was reduced (GM Only)
     if (game.user.isGM) {
         const linkedActors = new Set(game.users.map(u => u.character).filter(a => a));
@@ -297,13 +299,15 @@ async function _refreshAllSheets() {
         }
     }
 
-    Object.values(ui.windows).forEach(app => {
+    // ApplicationV2 sheets are tracked in foundry.applications.instances, not ui.windows (which
+    // holds only legacy v1 apps and is empty here), and the map holds only open apps.
+    for (const app of foundry.applications.instances.values()) {
         if (app.document?.documentName === 'Actor' &&
-            (app.document?.type === 'character' || app.document?.type === 'adversary')) {
-            app.render(false);
+            (app.document.type === 'character' || app.document.type === 'adversary')) {
+            app.render();
         }
-    });
-}
+    }
+}, 100);
 
 /**
  * Resolves an actor's effective max for a tracker, applying its per-actor modifier flag.

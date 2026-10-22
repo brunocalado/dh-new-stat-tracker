@@ -35,9 +35,6 @@ function _getIconChoices() {
  * supply their `id`, window title, and tracker definition.
  */
 class CharacterTrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
-    // Static callback to trigger a sheet refresh after saving. Shared by both subclasses.
-    static onSaveCallback = null;
-
     // Tracker definition ({@link CHARACTER_TRACKERS} entry); overridden by each subclass.
     static TRACKER = null;
 
@@ -231,31 +228,6 @@ class CharacterTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             e.preventDefault();
             const formData = new FormData(e.target);
             const keys = this.tracker.keys;
-            const set = (field, value) => game.settings.set(MODULE_ID, keys[field], value);
-
-            await set('enabled', formData.get('enabled') === 'on');
-
-            await set('attributeName', formData.get('attributeName'));
-            await set('attributeMax', parseInt(formData.get('attributeMax')));
-            await set('attributeInverted', formData.get('attributeInverted') === 'on');
-            await set('attributeColor', formData.get('attributeColor'));
-            await set('iconColor', formData.get('iconColor'));
-            await set('attributeIcon', formData.get('attributeIcon'));
-
-            await set('enableCustomBackground', formData.get('enableCustomBackground') === 'on');
-            await set('customBackgroundColor', formData.get('customBackgroundColor'));
-            await set('enableCustomBorder', formData.get('enableCustomBorder') === 'on');
-            await set('customBorderColor', formData.get('customBorderColor'));
-
-            await set('attributeSound', formData.get('attributeSound'));
-            await set('attributeVolume', parseFloat(formData.get('attributeVolume')));
-            await set('pipClickSound', formData.get('pipClickSound'));
-            await set('pipClickVolume', parseFloat(formData.get('pipClickVolume')));
-
-            await set('attributeVerbose', formData.get('verbose') === 'on');
-            await set('chatImage', formData.get('chatImage'));
-            await set('textMax', formData.get('textMax'));
-            await set('textDepleted', formData.get('textDepleted'));
 
             // Collect rules from dynamically generated rows
             const ruleRows = this.element.querySelectorAll('.rule-row');
@@ -265,12 +237,42 @@ class CharacterTrackerSettingsApp extends HandlebarsApplicationMixin(Application
                 target: row.querySelector('.rule-target').value,
                 action: row.querySelector('.rule-action').value
             }));
-            await set('trackerRules', JSON.stringify(rules));
 
-            await set('hideFromPlayers', formData.get('hideFromPlayers') === 'on');
+            const values = {
+                enabled: formData.get('enabled') === 'on',
+
+                attributeName: formData.get('attributeName'),
+                attributeMax: parseInt(formData.get('attributeMax')),
+                attributeInverted: formData.get('attributeInverted') === 'on',
+                attributeColor: formData.get('attributeColor'),
+                iconColor: formData.get('iconColor'),
+                attributeIcon: formData.get('attributeIcon'),
+
+                enableCustomBackground: formData.get('enableCustomBackground') === 'on',
+                customBackgroundColor: formData.get('customBackgroundColor'),
+                enableCustomBorder: formData.get('enableCustomBorder') === 'on',
+                customBorderColor: formData.get('customBorderColor'),
+
+                attributeSound: formData.get('attributeSound'),
+                attributeVolume: parseFloat(formData.get('attributeVolume')),
+                pipClickSound: formData.get('pipClickSound'),
+                pipClickVolume: parseFloat(formData.get('pipClickVolume')),
+
+                attributeVerbose: formData.get('verbose') === 'on',
+                chatImage: formData.get('chatImage'),
+                textMax: formData.get('textMax'),
+                textDepleted: formData.get('textDepleted'),
+
+                trackerRules: JSON.stringify(rules),
+                hideFromPlayers: formData.get('hideFromPlayers') === 'on'
+            };
+
+            // Written in parallel so the changed settings' onChange calls (which refresh the open
+            // sheets) arrive together and their debounce collapses them into one refresh, instead
+            // of one per server round trip.
+            await Promise.all(Object.entries(values).map(([field, value]) => game.settings.set(MODULE_ID, keys[field], value)));
 
             this.close();
-            if (CharacterTrackerSettingsApp.onSaveCallback) CharacterTrackerSettingsApp.onSaveCallback();
         });
     }
 }
@@ -303,8 +305,6 @@ class Tracker2SettingsApp extends CharacterTrackerSettingsApp {
  * Menu Application for adversary tracker settings (Identity + Mechanics + Rules).
  */
 class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(ApplicationV2) {
-    static onSaveCallback = null;
-
     static BASE_APPLICATION = foundry.applications.api.ApplicationV2;
 
     static DEFAULT_OPTIONS = {
@@ -429,18 +429,6 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
             e.preventDefault();
             const formData = new FormData(e.target);
 
-            await game.settings.set(MODULE_ID, 'advAttributeName', formData.get('attributeName'));
-            await game.settings.set(MODULE_ID, 'advAttributeMax', Math.min(ADV_MAX_POSSIBLE_VALUE, parseInt(formData.get('attributeMax'))));
-            await game.settings.set(MODULE_ID, 'advAttributeInverted', formData.get('attributeInverted') === 'on');
-            await game.settings.set(MODULE_ID, 'advAttributeColor', formData.get('attributeColor'));
-            await game.settings.set(MODULE_ID, 'advIconColor', formData.get('iconColor'));
-            await game.settings.set(MODULE_ID, 'advAttributeIcon', formData.get('attributeIcon'));
-            await game.settings.set(MODULE_ID, 'advEnableCustomBackground', formData.get('enableCustomBackground') === 'on');
-            await game.settings.set(MODULE_ID, 'advCustomBackgroundColor', formData.get('customBackgroundColor'));
-            await game.settings.set(MODULE_ID, 'advEnableCustomBorder', formData.get('enableCustomBorder') === 'on');
-            await game.settings.set(MODULE_ID, 'advCustomBorderColor', formData.get('customBorderColor'));
-            await game.settings.set(MODULE_ID, 'hideAdversaryTracker', formData.get('hideAdversaryTracker') === 'on');
-
             const ruleRows = this.element.querySelectorAll('.rule-row');
             const rules = Array.from(ruleRows).map(row => ({
                 id: row.dataset.ruleId,
@@ -448,10 +436,26 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
                 target: row.querySelector('.rule-target').value,
                 action: row.querySelector('.rule-action').value
             }));
-            await game.settings.set(MODULE_ID, 'advTrackerRules', JSON.stringify(rules));
+
+            const values = {
+                advAttributeName: formData.get('attributeName'),
+                advAttributeMax: Math.min(ADV_MAX_POSSIBLE_VALUE, parseInt(formData.get('attributeMax'))),
+                advAttributeInverted: formData.get('attributeInverted') === 'on',
+                advAttributeColor: formData.get('attributeColor'),
+                advIconColor: formData.get('iconColor'),
+                advAttributeIcon: formData.get('attributeIcon'),
+                advEnableCustomBackground: formData.get('enableCustomBackground') === 'on',
+                advCustomBackgroundColor: formData.get('customBackgroundColor'),
+                advEnableCustomBorder: formData.get('enableCustomBorder') === 'on',
+                advCustomBorderColor: formData.get('customBorderColor'),
+                hideAdversaryTracker: formData.get('hideAdversaryTracker') === 'on',
+                advTrackerRules: JSON.stringify(rules)
+            };
+
+            // In parallel, so the onChange refreshes arrive together (see the character tracker form).
+            await Promise.all(Object.entries(values).map(([key, value]) => game.settings.set(MODULE_ID, key, value)));
 
             this.close();
-            if (AdversaryTrackerSettingsApp.onSaveCallback) AdversaryTrackerSettingsApp.onSaveCallback();
         });
     }
 }
@@ -491,13 +495,12 @@ export function registerDaggerheartMenuButton() {
 }
 
 /**
- * Registers all module settings and wires up the settings UI callbacks.
+ * Registers all module settings. Every setting that changes what a sheet shows refreshes the
+ * open sheets through its onChange, the settings windows' saves included.
  * Called during the `init` hook.
  * @param {Function} refreshCallback - Called whenever a visual setting changes so all open sheets re-render.
  */
 export function registerModuleSettings(refreshCallback) {
-    CharacterTrackerSettingsApp.onSaveCallback = refreshCallback;
-
     // --- CHARACTER TRACKER SETTINGS (hidden from the standard settings menu) ---
     // The same field list is registered once per tracker, mapped to that tracker's
     // concrete keys. Tracker 2 overrides a few defaults (notably `enabled: false`).
@@ -538,8 +541,6 @@ export function registerModuleSettings(refreshCallback) {
             onChange: refreshCallback
         });
     });
-
-    AdversaryTrackerSettingsApp.onSaveCallback = refreshCallback;
 
     // --- VISIBLE SETTINGS (shown in the standard settings menu) ---
     game.settings.register(MODULE_ID, 'gmOnly', {
