@@ -107,24 +107,30 @@ function _getAdvSettings() {
 /* Rule Evaluation & Active Effects             */
 /* -------------------------------------------- */
 
+// The system keeps one flat roll bonus and one flat damage bonus; what a bonus applies to (an
+// action type, a damage type) is an effect conditional, not a sub-key of the path.
 const RULE_TARGET_MAP = {
     hope:      { key: 'system.resources.hope.max',      name: 'DHStatTracker: Hope' },
     hpMax:     { key: 'system.resources.hitPoints.max',  name: 'DHStatTracker: HP' },
     stressMax: { key: 'system.resources.stress.max',     name: 'DHStatTracker: Stress' },
-    scars:        { key: 'system.scars',                         name: 'DHStatTracker: Scars' },
-    evasion:      { key: 'system.evasion',                       name: 'DHStatTracker: Evasion' },
-    spellcasting: { key: 'system.bonuses.roll.spellcast.bonus',  name: 'DHStatTracker: Spellcasting' }
+    scars:        { key: 'system.scars',             name: 'DHStatTracker: Scars' },
+    evasion:      { key: 'system.evasion',           name: 'DHStatTracker: Evasion' },
+    spellcasting: { key: 'system.bonuses.roll.bonus', name: 'DHStatTracker: Spellcasting',
+                    conditionals: [{ type: 'actionType', actionTypes: ['spellcast'] }] }
 };
 
 const ADV_RULE_TARGET_MAP = {
-    stressMax:      { key: 'system.resources.stress.max',           name: 'DHStatTracker: Stress' },
-    hpMax:          { key: 'system.resources.hitPoints.max',        name: 'DHStatTracker: HP' },
-    attackBonus:    { key: 'system.bonuses.roll.attack.bonus',      name: 'DHStatTracker: Attack Bonus' },
-    critical:       { key: 'system.criticalThreshold',              name: 'DHStatTracker: Critical', invertAction: true },
-    physicalDmg:    { key: 'system.bonuses.damage.physical.bonus',  name: 'DHStatTracker: Physical Damage' },
-    magicalDmg:     { key: 'system.bonuses.damage.magical.bonus',   name: 'DHStatTracker: Magical Damage' },
-    majorThreshold: { key: 'system.damageThresholds.major',         name: 'DHStatTracker: Major Threshold' },
-    severeThreshold:{ key: 'system.damageThresholds.severe',        name: 'DHStatTracker: Severe Threshold' }
+    stressMax:      { key: 'system.resources.stress.max',     name: 'DHStatTracker: Stress' },
+    hpMax:          { key: 'system.resources.hitPoints.max',  name: 'DHStatTracker: HP' },
+    attackBonus:    { key: 'system.bonuses.roll.bonus',       name: 'DHStatTracker: Attack Bonus',
+                      conditionals: [{ type: 'actionType', actionTypes: ['attack'] }] },
+    critical:       { key: 'system.criticalThreshold',        name: 'DHStatTracker: Critical', invertAction: true },
+    physicalDmg:    { key: 'system.bonuses.damage.bonus',     name: 'DHStatTracker: Physical Damage',
+                      conditionals: [{ type: 'damageType', damageType: 'physical' }] },
+    magicalDmg:     { key: 'system.bonuses.damage.bonus',     name: 'DHStatTracker: Magical Damage',
+                      conditionals: [{ type: 'damageType', damageType: 'magical' }] },
+    majorThreshold: { key: 'system.damageThresholds.major',   name: 'DHStatTracker: Major Threshold' },
+    severeThreshold:{ key: 'system.damageThresholds.severe',  name: 'DHStatTracker: Severe Threshold' }
 };
 
 function _getRules(tracker) {
@@ -139,49 +145,20 @@ function _getAdvRules() {
     } catch { return []; }
 }
 
-function _buildEffectData(rule, targetMap = RULE_TARGET_MAP) {
-    const target = targetMap[rule.target];
-    if (!target) return null;
-
-    let value;
-    if (target.invertAction) {
-        value = rule.action === 'add' ? '-1' : '1';
-    } else {
-        value = rule.action === 'add' ? '1' : '-1';
-    }
-
+/**
+ * The `system` data of a rule's effect, in the system's own shape (`system.changes` with a change
+ * `type`). `conditionals` is always written, on updates too: the system migrates any effect data
+ * that carries changes but no conditionals by rebuilding the conditionals from the change keys,
+ * which turns them into `[]` for a flat key and would silently drop a "spellcast only" or
+ * "physical damage only" restriction.
+ * @param {object} target - A {@link RULE_TARGET_MAP} / {@link ADV_RULE_TARGET_MAP} entry.
+ * @param {number} value
+ * @returns {object}
+ */
+function _effectSystemData(target, value) {
     return {
-        name: target.name,
-        type: 'base',
-        system: {
-            rangeDependence: {
-                enabled: false,
-                type: 'withinRange',
-                target: 'hostile',
-                range: 'melee'
-            }
-        },
-        img: 'icons/magic/symbols/chevron-elipse-circle-blue.webp',
-        changes: [{
-            key: target.key,
-            mode: 2,
-            value: value,
-            priority: null
-        }],
-        disabled: false,
-        duration: {
-            startTime: 0, combat: null, seconds: null, rounds: null,
-            turns: null, startRound: null, startTurn: null
-        },
-        description: '<p>Daggerheart: Custom Stat Tracker</p>',
-        origin: null,
-        tint: '#ffffff',
-        transfer: false,
-        statuses: [],
-        sort: 0,
-        flags: {
-            [MODULE_ID]: { ruleId: rule.id }
-        }
+        changes: [{ key: target.key, type: 'add', value, phase: 'initial', priority: null }],
+        conditionals: target.conditionals ?? []
     };
 }
 
@@ -189,35 +166,29 @@ async function _applyRuleEffect(actor, rule, times = 1, targetMap = RULE_TARGET_
     const target = targetMap[rule.target];
     if (!target) return;
 
-    // Find existing AE for this rule
     const existing = actor.effects.find(e => e.getFlag(MODULE_ID, 'ruleId') === rule.id);
-
     // For inverted targets (like Critical), flip the delta direction
     const invertDelta = target.invertAction ? -1 : 1;
+    const delta = (rule.action === 'add' ? times : -times) * invertDelta;
 
     if (existing) {
-        const currentVal = parseInt(existing.changes[0]?.value) || 0;
-        const delta = (rule.action === 'add' ? times : -times) * invertDelta;
-        const newVal = currentVal + delta;
-
-        if (newVal === 0) {
-            await existing.delete();
-        } else {
-            await existing.update({
-                changes: [{ ...existing.changes[0], value: String(newVal) }]
-            });
-        }
-    } else {
-        // Reversals undo existing AEs — if none exists, there is nothing to reverse
-        if (isReversal) return;
-
-        const effectData = _buildEffectData(rule, targetMap);
-        if (!effectData) return;
-
-        const delta = (rule.action === 'add' ? times : -times) * invertDelta;
-        effectData.changes[0].value = String(delta);
-        await actor.createEmbeddedDocuments('ActiveEffect', [effectData]);
+        const newVal = (Number(existing.system.changes[0]?.value) || 0) + delta;
+        if (newVal === 0) await existing.delete();
+        else await existing.update({ system: _effectSystemData(target, newVal) });
+        return;
     }
+
+    // Reversals undo existing AEs — if none exists, there is nothing to reverse
+    if (isReversal) return;
+
+    await actor.createEmbeddedDocuments('ActiveEffect', [{
+        name: target.name,
+        type: 'base',
+        img: 'icons/magic/symbols/chevron-elipse-circle-blue.webp',
+        description: '<p>Daggerheart: Custom Stat Tracker</p>',
+        system: _effectSystemData(target, delta),
+        flags: { [MODULE_ID]: { ruleId: rule.id } }
+    }]);
 }
 
 function _reverseAction(action) {

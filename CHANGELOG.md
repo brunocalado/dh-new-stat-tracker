@@ -2,6 +2,8 @@
 
 - [Added] Compatibility with Daggerheart: Nice Sheets: character trackers show in the Nice sheet's sidebar, styled as its resource tracks and colored with each tracker's color.
 - [Fixed] Changing tracker settings (enable, name, colors, max, GM Only Mode, and the rest) now refreshes open character and adversary sheets right away; before, the change only showed after the sheet was re-rendered for another reason.
+- [Fixed] Rule effects are created in the Daggerheart 2.10 effect format. Spellcasting, Attack Bonus, Physical Damage and Magical Damage rules now stay restricted to spellcast rolls, attack rolls, or that damage type; before, the second change to the same rule turned them into a bonus on every roll or all damage.
+- [Breaking][Changed] Requires Daggerheart system 2.10.13 or later.
 
 
 # 0.1.2

@@ -464,8 +464,8 @@ class AdversaryTrackerSettingsApp extends HandlebarsApplicationMixin(Application
  * Registers the "Tracker Manager" button in the Daggerheart system sidebar menu.
  */
 export function registerDaggerheartMenuButton() {
-    Hooks.on("renderDaggerheartMenu", (app, element, data) => {
-        const html = element instanceof jQuery ? element[0] : element;
+    // DaggerheartMenu is an ApplicationV2, so the hook receives an HTMLElement.
+    Hooks.on("renderDaggerheartMenu", (app, html, data) => {
 
         const myButton = document.createElement("button");
         myButton.type = "button";
