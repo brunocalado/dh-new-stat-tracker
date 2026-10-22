@@ -44,6 +44,9 @@
     },
     {
       "src": "styles/chat-card.css"
+    },
+    {
+      "src": "styles/nice-sheets.css"
     }
   ],
   "url": "https://github.com/brunocalado/dh-new-stat-tracker",

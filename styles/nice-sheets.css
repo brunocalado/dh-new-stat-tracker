@@ -1,0 +1,43 @@
+/*!
+ * Daggerheart: Custom Stat Tracker
+ * 2026 https://github.com/brunocalado
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
+ */
+
+/* ============================================================
+   nice-sheets.css — Character trackers on the Nice Sheets
+   character sheet. The tracks reuse Nice's .nice-track markup,
+   so its sidebar CSS draws them (and its reduced-motion and
+   observer .viewMode rules apply); only what differs is here.
+   Nice's track CSS is not copied: a copy would drift on every
+   Nice styling change. The .attribute-pip rules in
+   tracker-injection.css need a .dh-new-stat-tracker-section
+   ancestor, so they do not reach these pips.
+   ============================================================ */
+
+.dh-nice-sheets .dh-new-stat-tracker-nice {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Nice's .nice-vitals gap, so the wrapper reads as more rows of the same column */
+}
+
+.dh-nice-sheets .nice-track.extra.dh-new-stat-tracker-track {
+    .nice-pip.filled { color: var(--dh-new-stat-tracker-icon-color); }
+    .nice-pip.no-interact { cursor: default; pointer-events: none; }
+
+    /* Alert state: the track pulses in its own hue, the way Nice's ring cards flash. */
+    &.attribute-max { animation: dh-new-stat-tracker-nice-alert 1.6s ease-in-out infinite; }
+}
+
+@keyframes dh-new-stat-tracker-nice-alert {
+    0%, 100% {
+        background: color-mix(in srgb, var(--nice-track-hue) 8%, transparent);
+        box-shadow: inset 0 0 4px color-mix(in srgb, var(--nice-track-hue) 30%, transparent);
+    }
+    50% {
+        background: color-mix(in srgb, var(--nice-track-hue) 22%, transparent);
+        box-shadow: inset 0 0 12px color-mix(in srgb, var(--nice-track-hue) 65%, transparent);
+    }
+}

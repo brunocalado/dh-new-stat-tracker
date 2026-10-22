@@ -355,10 +355,17 @@ Hooks.on('preCreateActor', (actor, _data, _options, _userId) => {
     }
 });
 
-// Official character sheet only. Per-tracker enable/visibility is resolved during injection.
+// Official character sheet and the Nice Sheets character sheet, which extends it and so fires the
+// same hook. Per-tracker enable/visibility is resolved during injection.
 Hooks.on('renderCharacterSheet', (app, _html) => {
     const actor = app.document;
     if (!actor || actor.type !== 'character') return;
+    // Nice Sheets replaces the system layout (it has no .character-row); its sidebar vitals are the
+    // anchor there. Detected per render rather than by the module being active, because Configure
+    // Sheet can switch any actor back to the system sheet. Injected synchronously: the element is
+    // already in the DOM, and a frame's delay would show the sidebar for one frame without the tracks.
+    const niceVitals = app.element.querySelector('.nice-vitals');
+    if (niceVitals) return _injectNiceTrackers(niceVitals, actor);
     requestAnimationFrame(() => _injectCharacterTrackers(app.element, actor));
 });
 
@@ -463,6 +470,92 @@ function _injectTrackerSection(wrapper, actor, tracker) {
         if (after) wrapper.insertBefore(newSection, after);
         else wrapper.appendChild(newSection);
     }
+}
+
+/**
+ * Injects every enabled, visible character tracker into the Nice Sheets sidebar vitals, after its
+ * own resource tracks and before the damage block. Nice replaces the sidebar part on its renders,
+ * so there is rarely anything left to repaint: the tracks are rebuilt on every call instead of
+ * going through the smart-repaint path the system sheet uses.
+ * @param {HTMLElement} vitals - The sheet's `.nice-vitals` section.
+ * @param {Actor} actor
+ */
+function _injectNiceTrackers(vitals, actor) {
+    vitals.querySelector(':scope > .dh-new-stat-tracker-nice')?.remove();
+
+    const tracks = CHARACTER_TRACKERS
+        .filter(t => game.settings.get(MODULE_ID, t.keys.enabled) && _isTrackerVisibleForUser(actor, t))
+        .map(t => _buildNiceTrack(actor, t));
+    if (!tracks.length) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('dh-new-stat-tracker-nice');
+    wrapper.append(...tracks);
+    vitals.insertBefore(wrapper, vitals.querySelector(':scope > .nice-damage'));
+}
+
+/**
+ * Builds one tracker as a Nice Sheets extra-resource track (templates/sidebar.hbs in Nice), so it
+ * takes Nice's own styling. The pips carry no `data-action`: Nice's `niceToggleResource` writes
+ * system resources, and these values live in this module's flags, handled by `_attachListeners`.
+ * @param {Actor} actor
+ * @param {object} tracker - A {@link CHARACTER_TRACKERS} entry.
+ * @returns {HTMLElement}
+ */
+function _buildNiceTrack(actor, tracker) {
+    const settings = _getSettings(tracker);
+    const current = actor.getFlag(MODULE_ID, tracker.flagKey) ?? 0;
+    const effectiveMax = _getActorMax(actor, settings.max, tracker.modifierKey);
+    const canInteract = settings.gmOnly ? game.user.isGM : actor.isOwner;
+
+    const track = document.createElement('div');
+    track.classList.add('nice-track', 'extra', 'dh-new-stat-tracker-track');
+    track.dataset.trackerIndex = String(tracker.index);
+    // A Nice track has no box, so the custom background and border settings have nothing to style.
+    track.style.setProperty('--nice-track-hue', settings.color);
+    track.style.setProperty('--nice-track-glow', `color-mix(in srgb, ${settings.color}, white 45%)`);
+    track.style.setProperty('--dh-new-stat-tracker-icon-color', settings.iconColor);
+
+    const header = document.createElement('header');
+    const label = document.createElement('span');
+    label.classList.add('nice-track-label');
+    label.textContent = settings.name;
+    label.dataset.tooltipText = settings.name;
+    const rule = document.createElement('span');
+    rule.classList.add('nice-track-rule');
+    const count = document.createElement('span');
+    count.classList.add('nice-track-count');
+    const max = document.createElement('span');
+    max.classList.add('max');
+    const sep = document.createElement('span');
+    sep.classList.add('sep');
+    sep.textContent = '/';
+    max.append(sep, String(effectiveMax));
+    count.append(String(current), max);
+    header.append(label, rule, count);
+
+    const pips = document.createElement('div');
+    pips.classList.add('nice-pips');
+    pips.style.setProperty('--nice-pip-count', String(effectiveMax));
+    const activeIcon = settings.icon || 'fa-solid fa-skull';
+    for (let i = 1; i <= effectiveMax; i++) {
+        const pip = document.createElement('a');
+        // `.attribute-pip` + `data-value` are what `_attachListeners` keys on.
+        pip.classList.add('nice-pip', 'attribute-pip');
+        pip.dataset.value = String(i);
+        if (i <= current) pip.classList.add('filled');
+        if (!canInteract) pip.classList.add('no-interact');
+        const icon = document.createElement('i');
+        icon.className = i <= current ? activeIcon : 'fa-regular fa-circle';
+        icon.inert = true;
+        pip.appendChild(icon);
+        pips.appendChild(pip);
+    }
+
+    track.append(header, pips);
+    _updateMaxClass(track, current, effectiveMax, settings.inverted);
+    _attachListeners(track, actor, effectiveMax, tracker);
+    return track;
 }
 
 
